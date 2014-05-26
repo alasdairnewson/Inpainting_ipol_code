@@ -1,0 +1,10 @@
+
+
+CC=g++
+CFLAGS= -fopenmp
+
+test_omp: test_omp_main.cpp
+	$(CC) $(CFLAGS) test_omp_main.cpp
+
+clean: inpaint_image_main.cpp
+	rm -f *.o

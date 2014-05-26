@@ -1,0 +1,31 @@
+
+
+//declarations for the image pyramid functions
+
+#ifndef IMAGE_PYRAMID_H
+#define IMAGE_PYRAMID_H
+
+#include "image_structures.h"
+
+	class nTupleVolumePyramid
+	{
+		private:
+            nTupleVolume **values;
+        
+        public:
+            int nLevels;
+            
+            nTupleVolumePyramid(); //create an empty volume
+            ~nTupleVolumePyramid();
+
+            imageDataType get_value(int x, int y, int t, int z);
+            //special case for an image (temporal dimension equal to 1)
+            imageDataType get_image_value(int x, int y, int z);
+            imageDataType* get_value_ptr(int x, int y, int t, int z);
+            imageDataType* get_data_ptr();
+            void set_value(int x, int y, int t, int z, imageDataType value);
+            //special case for an image (temporal dimension equal to 1)
+            void set_image_value(int x, int y, int z, imageDataType value);
+	};
+
+#endif

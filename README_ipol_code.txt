@@ -1,4 +1,4 @@
-Author : Alasdair Newson
+    Author : Alasdair Newson
 Date : 14 April 2014
 Subject : Image inpainting code guide
 
