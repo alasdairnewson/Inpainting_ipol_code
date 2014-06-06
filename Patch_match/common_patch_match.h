@@ -13,7 +13,7 @@
     #include <fstream> // file I/O
     #include <iostream>
 	//#include <windows.h>
-    #include <omp.h>
+    //#include <omp.h>
         
     //CUDA INCLUDES
 //     #include <cuda.h>

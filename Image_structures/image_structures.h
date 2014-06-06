@@ -24,7 +24,7 @@
     #include <bitset>
     #include <unistd.h>
 	//#include <windows.h>
-    #include <omp.h>
+    //#include <omp.h>
         
     using std::runtime_error;
 
