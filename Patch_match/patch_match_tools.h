@@ -34,6 +34,20 @@
     int patch_match_propagation(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume,
             nTupleVolume *occVol,  nTupleVolume *modVol,
 		const parameterStruct *params, int iterationNb);
+	
+	/*******************************/
+	/*** PATCH LEVEL INTERLEAVING **/
+	/*******************************/
+	
+	//random search and propagation interleaving at patch levels
+	//Random search
+	int patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume *imgVolA, nTupleVolume *imgVolB,
+            nTupleVolume *occVol,  nTupleVolume *modVol, const parameterStruct *params, int i, int j, int k);
+    
+    //propagation functions
+    int patch_match_propagation_patch_level(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume,
+            nTupleVolume *occVol,  nTupleVolume *modVol,
+		const parameterStruct *params, int iterationNb, int i, int j, int k);
 
     int patch_match_long_propagation(nTupleVolume *dispField, nTupleVolume *imgVolA, nTupleVolume *imgVolB,
             nTupleVolume *occVol,  nTupleVolume *modVol, const parameterStruct *params);

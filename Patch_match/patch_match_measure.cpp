@@ -50,7 +50,7 @@ int xB, int yB, int tB, float minVal, const parameterStruct *params)
                     if ((!check_in_boundaries( imgVolA, xAtemp, yAtemp, tAtemp)))
                         continue;   //if we are not in the boundaries, do not compare
 
-                    sumOcc = sumOcc + (int)(!(*(occVol->get_value_ptr(xAtemp,yAtemp,tAtemp,0))) == 1);
+                    sumOcc = sumOcc + (int)( (!(occVol->get_value(xAtemp,yAtemp,tAtemp,0))) == 1);
 
                 }
     }

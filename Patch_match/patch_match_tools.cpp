@@ -522,6 +522,197 @@ int patch_match_propagation(nTupleVolume *dispField, nTupleVolume *departVolume,
     return(nbModified);
 }
 
+/******************************************/
+/******************************************/
+/******   PATCH LEVEL INTERLEAVING   ******/
+/******************************************/
+/******************************************/
+
+int patch_match_one_iteration_patch_level(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume,
+        nTupleVolume *occVol, nTupleVolume *modVol, const parameterStruct *params, int iterationNb)
+{
+
+	for (int k=0; k< ((dispField->tSize) ); k++)
+		for (int j=0; j< ((dispField->ySize) ); j++)
+			for (int i=0; i< ((dispField->xSize) ); i++)
+			{
+				//propagation
+				patch_match_propagation_patch_level(dispField, departVolume, arrivalVolume, occVol,  
+        		modVol, params, iterationNb, i, j, k);
+				
+				//random search
+				patch_match_random_search_patch_level(dispField, departVolume, arrivalVolume,
+        		occVol, modVol, params, i, j, k);
+			}
+
+}
+
+int patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume *imgVolA, nTupleVolume *imgVolB,
+        nTupleVolume *occVol, nTupleVolume *modVol, const parameterStruct *params, int i, int j, int k)
+{
+	//create random number seed
+	int xRand,yRand,tRand;
+	int randMinX,randMaxX,randMinY,randMaxY,randMinT,randMaxT;
+	int hPatchSizeX,hPatchSizeY,hPatchSizeT, zMax;
+	int xTemp,yTemp,tTemp,wTemp,wMax;
+    int *xDisp, *yDisp, *tDisp;
+	float ssdTemp;
+    int nbModified = 0;
+
+	hPatchSizeX = (int)floor((float)((dispField->patchSizeX)/2));	//half the patch size
+	hPatchSizeY = (int)floor((float)((dispField->patchSizeY)/2));	//half the patch size
+	hPatchSizeT = (int)floor((float)((dispField->patchSizeT)/2));	//half the patch size
+    
+    xDisp = new int[1];
+    yDisp = new int[1];
+    tDisp = new int[1];
+
+	//calculate the maximum z (patch search index)
+    wMax = min_int(params->w, max_int(max_int(imgVolB->xSize,imgVolB->ySize),imgVolB->tSize));
+	zMax = (int)ceil((float) (- (log((float)(wMax)))/(log((float)(params->alpha)))) );
+    
+    nTupleVolume *wValues = new nTupleVolume(1,zMax,1,1,imgVolA->indexing);
+    //store the values of the maximum search parameters
+    for (int z=0; z<zMax; z++)
+    {
+        wValues->set_value(z,0,0,0,
+                (imageDataType)round_float((params->w)*((float)pow((float)params->alpha,z)))
+                );
+    }
+
+	if (modVol->xSize >0)
+		if (modVol->get_value(i,j,k,0) == 0)   //if we don't want to modify this match
+			return(0);
+	ssdTemp = dispField->get_value(i,j,k,3); //get the saved ssd value
+	
+	for (int z=0; z<zMax; z++)	//test for different search indices
+	{
+		xTemp = i+(int)dispField->get_value(i,j,k,0);	//get the arrival position of the current offset
+		yTemp = j+(int)dispField->get_value(i,j,k,1);	//get the arrival position of the current offset
+		tTemp = k+(int)dispField->get_value(i,j,k,2);	//get the arrival position of the current offset
+
+		wTemp = wValues->get_value(z,0,0,0);
+		// X values
+		randMinX = max_int(xTemp - wTemp,hPatchSizeX);
+		randMaxX = min_int(xTemp + wTemp,imgVolB->xSize - hPatchSizeX - 1);
+		// Y values
+		randMinY = max_int(yTemp - wTemp,hPatchSizeY);
+		randMaxY = min_int(yTemp + wTemp,imgVolB->ySize - hPatchSizeY - 1);
+		// T values
+		randMinT = max_int(tTemp - wTemp,hPatchSizeT);
+		randMaxT = min_int(tTemp + wTemp,imgVolB->tSize - hPatchSizeT - 1);
+
+		//new positions in the image imgB
+		xRand = rand_int_range(randMinX, randMaxX);	//random values between xMin and xMax, clamped to the sizes of the image B
+		yRand = rand_int_range(randMinY, randMaxY);	//random values between yMin and yMax, clamped to the sizes of the image B
+		tRand = rand_int_range(randMinT, randMaxT);	//random values between tMin and tMax, clamped to the sizes of the image B
+
+		if (check_is_occluded(occVol,xRand,yRand,tRand))
+			continue;	//the new position is occluded
+		if (check_in_inner_boundaries(imgVolB,xRand,yRand,tRand,params) == 0)
+			continue;	//the new position is not in the inner boundaries
+		if (check_max_shift_distance( (xRand-i),(yRand-j),(tRand-k),params) == false)
+			continue;	//the new position is too far away
+
+		ssdTemp =  ssd_patch_measure(imgVolA, imgVolB, dispField,occVol, i, j, k, xRand, yRand, tRand, ssdTemp,params);
+
+		if (ssdTemp != -1)	//we have a better match
+		{
+			dispField->set_value(i,j,k,0, (imageDataType)(xRand-i));
+			dispField->set_value(i,j,k,1, (imageDataType)(yRand-j));
+			dispField->set_value(i,j,k,2, (imageDataType)(tRand-k));
+			dispField->set_value(i,j,k,3, (imageDataType)(ssdTemp));
+
+			nbModified = nbModified+1;
+		}
+		else
+			ssdTemp = dispField->get_value(i,j,k,3); //set the saved ssd value bakc to its proper (not -1) value
+	}
+	
+    delete xDisp;
+    delete yDisp;
+    delete tDisp;
+    delete wValues;
+    return(nbModified);
+}
+
+//one iteration of the propagation of the patch match algorithm, for a SINGLE patch
+int patch_match_propagation_patch_level(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume, nTupleVolume *occVol,  
+        nTupleVolume *modVol, const parameterStruct *params, int iterationNb, int i, int j, int k)
+{
+	//declarations
+	int *correctInd;
+    int nbModified=0;
+	float currentError, *minVector;
+	
+	correctInd = new int;
+
+	minVector = (float*)malloc((size_t)3*sizeof(float));
+
+	//calculate the error of the current displacement
+	currentError = dispField->get_value(i,j,k,3);
+                    
+	get_min_correct_error(dispField,departVolume,arrivalVolume,occVol,
+	i, j, k, iterationNb&1, correctInd,minVector,currentError,params);
+	
+	//if the best displacement is the current one. Note : we have taken into account the case
+	//where none of the diplacements around the current pixel are valid
+	if (*correctInd == -1)	//if the best displacement is the current one
+	{
+		dispField->set_value(i,j,k,3,currentError);
+		return(0);
+	}
+	if (iterationNb&1)	//if we are on an odd iteration
+	{
+		if ((*correctInd) == 0){
+			copy_pixel_values_nTuple_volume(dispField,dispField, min_int(i+1,((int)dispField->xSize)-1), j, k, i, j, k);
+			nbModified++;
+		}
+
+		else if((*correctInd) == 1){
+			copy_pixel_values_nTuple_volume(dispField,dispField, i, min_int(j+1,((int)dispField->ySize)-1), k, i, j, k);
+			nbModified++;
+		}
+		else if( (*correctInd) == 2){
+			copy_pixel_values_nTuple_volume(dispField,dispField, i, j, min_int(k+1,((int)dispField->tSize)-1), i, j, k);
+			nbModified++;
+		}
+		else
+			MY_PRINTF("Error, correct ind not chosen\n.");
+		//now calculate the error of the patch matching
+		currentError = calclulate_patch_error(departVolume,arrivalVolume,dispField,occVol,i,j,k, -1,params);
+		dispField->set_value(i,j,k,3,currentError);
+	}
+	else		//even iteration
+	{
+		if ( (*correctInd) == 0){
+			copy_pixel_values_nTuple_volume(dispField,dispField, max_int(i-1,0), j, k, i, j, k);
+			nbModified++;
+		}
+
+		else if( (*correctInd) == 1){
+			copy_pixel_values_nTuple_volume(dispField,dispField, i, max_int(j-1,0), k, i, j, k);
+			nbModified++;
+		}
+
+		else if( (*correctInd) == 2){
+			copy_pixel_values_nTuple_volume(dispField,dispField, i, j, max_int(k-1,0), i, j, k);
+			nbModified++;
+		}
+		else
+			MY_PRINTF("Error, correct ind not chosen\n.");
+		//now calculate the error of the patch matching
+		currentError = calclulate_patch_error(departVolume,arrivalVolume,dispField,occVol,i,j,k, -1,params);
+		dispField->set_value(i,j,k,3,currentError);
+	}
+	
+	delete correctInd;
+	delete minVector;
+	
+	return(nbModified);
+}
+
+
 //this function returns the minimum error of the patch differences around the pixel at (i,j,k)
 //and returns the index of the best position in correctInd :
 // -1 : none are correct
