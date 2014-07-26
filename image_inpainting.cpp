@@ -27,12 +27,12 @@ parameterStruct * initialise_patch_match_parameters(int patchSizeX, int patchSiz
 void inpaint_image(const char *fileIn,const char *fileOccIn, const char *fileOut, bool useFeatures)
 {
 	//algorithm parameters
-	int patchSizeX = 5;
-	int patchSizeY = 5;
-	int nLevels = -1;
+	int patchSizeX = 3;
+	int patchSizeY = 3;
+	int nLevels = 1;
 	int maxShiftDistance = -1;
 	float residualThreshold = 0.1;
-	int maxIterations = 10;
+	int maxIterations = 0;
 	
 	// *************************** //
 	// ***** READ INPUTS ********* //
@@ -223,6 +223,7 @@ void initialise_inpainting(nTupleVolume *imgVol, nTupleVolume *occVol, featurePy
 				nTupleVolume *shiftVol, parameterStruct *patchMatchParams)
 {
 	int iterNb=0;
+	char buffer [50];
 	patchMatchParams->partialComparison = 1;
 	bool initialisation = true;
 	nTupleVolume *occVolIter;
@@ -301,6 +302,11 @@ void initialise_inpainting(nTupleVolume *imgVol, nTupleVolume *occVol, featurePy
 		delete(occVolPatchMatch);
 		delete(occVolReconstruct);
 
+		char fileName[512];
+		std::ostringstream os;
+		os << fileName << "iteration_" << iterNb;
+		const char* stringOut = (os.str()).c_str();
+		write_image(imgVol,stringOut,255);
 		
 		//copy the information from the eroded occlusion to the current occlusion (occVolIter)
 		delete(occVolIter);

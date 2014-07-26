@@ -38,12 +38,15 @@
 	/*******************************/
 	/*** PATCH LEVEL INTERLEAVING **/
 	/*******************************/
+	int patch_match_one_iteration_patch_level(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume,
+        nTupleVolume *occVol, nTupleVolume *modVol, const parameterStruct *params, int iterationNb);
 	
 	//random search and propagation interleaving at patch levels
 	//Random search
 	int patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume *imgVolA, nTupleVolume *imgVolB,
-            nTupleVolume *occVol,  nTupleVolume *modVol, const parameterStruct *params, int i, int j, int k);
-    
+        nTupleVolume *occVol, nTupleVolume *modVol, const parameterStruct *params, int i, int j, int k,
+        nTupleVolume *wValues);
+        
     //propagation functions
     int patch_match_propagation_patch_level(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume,
             nTupleVolume *occVol,  nTupleVolume *modVol,

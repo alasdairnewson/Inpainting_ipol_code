@@ -68,7 +68,10 @@ void patch_match_ANN(nTupleVolume *imgVolA, nTupleVolume *imgVolB,
             return;
         for (int i=0; i<(params->nIters); i++)
         {
-            startTime = getMilliSecs();//time(&startTime);//startTime = clock();
+        	patch_match_one_iteration_patch_level(dispField, imgVolA, imgVolB,
+        	imgVolOcc, imgVolMod, params, i);
+        
+            /*startTime = getMilliSecs();//time(&startTime);//startTime = clock();
             
             nbModified = patch_match_propagation(dispField, imgVolA, imgVolB,imgVolOcc,imgVolMod,params,i);
             stopTime = getMilliSecs();////time(&stopTime);
@@ -80,7 +83,7 @@ void patch_match_ANN(nTupleVolume *imgVolA, nTupleVolume *imgVolB,
         	nbModified = patch_match_random_search(dispField, imgVolA,imgVolB, imgVolOcc,imgVolMod,params);//nbModified = patch_match_random_search_parallel(dispField, imgVolA,imgVolB, imgVolOcc,occVolInds,imgVolMod,params);
             stopTime = getMilliSecs();//time(&stopTime);
             randomSearchTime = randomSearchTime + (stopTime-startTime);//randomSearchTime + double(fabs(difftime(startTime,stopTime)));
-            //MY_PRINTF("Iteration %d, random. Nbmodified : %d\n",i,nbModified);
+            //MY_PRINTF("Iteration %d, random. Nbmodified : %d\n",i,nbModified);*/;
         }
     }
     MY_PRINTF("Propagation time : %f s\n",(float)(((float)propagationTime)/1000));//propagationTime/CLOCKS_PER_SEC);

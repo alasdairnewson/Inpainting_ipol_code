@@ -531,6 +531,19 @@ int patch_match_propagation(nTupleVolume *dispField, nTupleVolume *departVolume,
 int patch_match_one_iteration_patch_level(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume,
         nTupleVolume *occVol, nTupleVolume *modVol, const parameterStruct *params, int iterationNb)
 {
+	int wMax, zMax;
+	//calculate the maximum z (patch search index)
+    wMax = min_int(params->w, max_int(max_int(arrivalVolume->xSize,arrivalVolume->ySize),arrivalVolume->tSize));
+	zMax = (int)ceil((float) (- (log((float)(wMax)))/(log((float)(params->alpha)))) );
+    
+    nTupleVolume *wValues = new nTupleVolume(1,zMax,1,1,departVolume->indexing);
+    //store the values of the maximum search parameters
+    for (int z=0; z<zMax; z++)
+    {
+        wValues->set_value(z,0,0,0,
+                (imageDataType)round_float((params->w)*((float)pow((float)params->alpha,z)))
+                );
+    }
 
 	for (int k=0; k< ((dispField->tSize) ); k++)
 		for (int j=0; j< ((dispField->ySize) ); j++)
@@ -542,19 +555,20 @@ int patch_match_one_iteration_patch_level(nTupleVolume *dispField, nTupleVolume 
 				
 				//random search
 				patch_match_random_search_patch_level(dispField, departVolume, arrivalVolume,
-        		occVol, modVol, params, i, j, k);
+        		occVol, modVol, params, i, j, k, wValues);
 			}
-
+	delete wValues;
 }
 
 int patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume *imgVolA, nTupleVolume *imgVolB,
-        nTupleVolume *occVol, nTupleVolume *modVol, const parameterStruct *params, int i, int j, int k)
+        nTupleVolume *occVol, nTupleVolume *modVol, const parameterStruct *params, int i, int j, int k,
+        nTupleVolume *wValues)
 {
 	//create random number seed
 	int xRand,yRand,tRand;
 	int randMinX,randMaxX,randMinY,randMaxY,randMinT,randMaxT;
-	int hPatchSizeX,hPatchSizeY,hPatchSizeT, zMax;
-	int xTemp,yTemp,tTemp,wTemp,wMax;
+	int hPatchSizeX,hPatchSizeY,hPatchSizeT;
+	int xTemp,yTemp,tTemp,wTemp;
     int *xDisp, *yDisp, *tDisp;
 	float ssdTemp;
     int nbModified = 0;
@@ -567,25 +581,12 @@ int patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume 
     yDisp = new int[1];
     tDisp = new int[1];
 
-	//calculate the maximum z (patch search index)
-    wMax = min_int(params->w, max_int(max_int(imgVolB->xSize,imgVolB->ySize),imgVolB->tSize));
-	zMax = (int)ceil((float) (- (log((float)(wMax)))/(log((float)(params->alpha)))) );
-    
-    nTupleVolume *wValues = new nTupleVolume(1,zMax,1,1,imgVolA->indexing);
-    //store the values of the maximum search parameters
-    for (int z=0; z<zMax; z++)
-    {
-        wValues->set_value(z,0,0,0,
-                (imageDataType)round_float((params->w)*((float)pow((float)params->alpha,z)))
-                );
-    }
-
 	if (modVol->xSize >0)
 		if (modVol->get_value(i,j,k,0) == 0)   //if we don't want to modify this match
 			return(0);
 	ssdTemp = dispField->get_value(i,j,k,3); //get the saved ssd value
 	
-	for (int z=0; z<zMax; z++)	//test for different search indices
+	for (int z=0; z<(wValues->xSize); z++)	//test for different search indices
 	{
 		xTemp = i+(int)dispField->get_value(i,j,k,0);	//get the arrival position of the current offset
 		yTemp = j+(int)dispField->get_value(i,j,k,1);	//get the arrival position of the current offset
@@ -632,7 +633,6 @@ int patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume 
     delete xDisp;
     delete yDisp;
     delete tDisp;
-    delete wValues;
     return(nbModified);
 }
 

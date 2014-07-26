@@ -104,23 +104,39 @@ void write_image(nTupleVolume *imgVol, const char *fileName, imageDataType norma
 		//write image
 		if (normalisationScalar>0)	//for better visulisation of results
 		{
+			nTupleVolume* imgVolCopy;
+			//make a copy of the input image, so as not to modify the input
+			imgVolCopy = copy_image_nTuple(imgVol);
 			//set minimum value to 0
 			imageDataType minValue = imgVol->min_value();
-			imgVol->add(-minValue);
+			imgVolCopy->add(-minValue);
 			//normalise values
 			imageDataType maxValue = imgVol->max_value();
-			imgVol->multiply((imageDataType)1/maxValue);
+			imgVolCopy->multiply((imageDataType)1/maxValue);
 			//set maximum value to normalisationScalar
-			imgVol->multiply((imageDataType)normalisationScalar);
+			imgVolCopy->multiply((imageDataType)normalisationScalar);
+			
+			readWriteSuccess = write_png_f32((char*)stringOut, imgVolCopy->get_data_ptr(),
+			  imgVolCopy->xSize, imgVolCopy->ySize, imgVolCopy->nTupleSize);
+			if (readWriteSuccess == -1)
+			{
+				printf("Unable to write the image\n");
+				delete imgVolCopy;
+				return;
+			}
+			delete imgVolCopy;
+		}
+		else //no normalisation
+		{
+			readWriteSuccess = write_png_f32((char*)stringOut, imgVol->get_data_ptr(),
+			  imgVol->xSize, imgVol->ySize, imgVol->nTupleSize);
+			if (readWriteSuccess == -1)
+			{
+				printf("Unable to write the image\n");
+				return;
+			}
 		}
 		
-	  	readWriteSuccess = write_png_f32((char*)stringOut, imgVol->get_data_ptr(),
-		              imgVol->xSize, imgVol->ySize, imgVol->nTupleSize);
-		if (readWriteSuccess == -1)
-		{
-			printf("Unable to write the image\n");
-			return;
-		}
 }
 
 void write_shift_map(nTupleVolume *shiftVol, const char *fileName)
