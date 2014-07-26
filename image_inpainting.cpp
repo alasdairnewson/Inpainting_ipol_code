@@ -29,10 +29,10 @@ void inpaint_image(const char *fileIn,const char *fileOccIn, const char *fileOut
 	//algorithm parameters
 	int patchSizeX = 3;
 	int patchSizeY = 3;
-	int nLevels = 1;
+	int nLevels = -1;
 	int maxShiftDistance = -1;
 	float residualThreshold = 0.1;
-	int maxIterations = 0;
+	int maxIterations = 10;
 	
 	// *************************** //
 	// ***** READ INPUTS ********* //
@@ -302,11 +302,11 @@ void initialise_inpainting(nTupleVolume *imgVol, nTupleVolume *occVol, featurePy
 		delete(occVolPatchMatch);
 		delete(occVolReconstruct);
 
-		char fileName[512];
+		/*char fileName[512];
 		std::ostringstream os;
 		os << fileName << "iteration_" << iterNb;
 		const char* stringOut = (os.str()).c_str();
-		write_image(imgVol,stringOut,255);
+		write_image(imgVol,stringOut,255);*/
 		
 		//copy the information from the eroded occlusion to the current occlusion (occVolIter)
 		delete(occVolIter);

@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 	const char *fileInOcc = (argc >= 3) ? argv[2] : "American_occlusion.png";
 	const char *fileOut = (argc >= 4) ? argv[3] : "American_inpainted";
 	
-	bool useFeatures=false;
+	bool useFeatures=true;
 	
 	time(&startTime);//startTime = clock();
 	
