@@ -6,7 +6,7 @@
 #define LAMDA_MEASURE 0
 
 float ssd_patch_measure(nTupleVolume *imgVolA, nTupleVolume *imgVolB, nTupleVolume *dispField, nTupleVolume *occVol, int xA, int yA, int tA,
-int xB, int yB, int tB, float minVal, const parameterStruct *params)
+int xB, int yB, int tB, float minVal, const patchMatchParameterStruct *params)
 {
 	//declarations
 	int i,j,k, p,xAtemp, yAtemp, tAtemp, xBtemp, yBtemp, tBtemp;

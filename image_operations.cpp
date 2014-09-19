@@ -7,6 +7,21 @@ void seed_random_numbers( double inputSeed)
  	srand ( (unsigned int)inputSeed );   //create random number seed
 }
 
+std::string remove_extension_from_file(const char* fileIn)
+{
+	std::string filename = fileIn;
+	
+	size_t lastdot = filename.find_last_of(".");
+    if (lastdot == std::string::npos)
+    	return ( filename);
+	else
+	{
+		std::string fileOut = filename.substr(0, lastdot);
+    	return ( fileOut);
+	}
+
+}
+
 float * read_image(const char *fileIn, size_t *nx, size_t *ny, size_t *nc)
 {
 
@@ -97,9 +112,10 @@ void write_image(nTupleVolume *imgVol, const char *fileName, imageDataType norma
 {
 	int readWriteSuccess;
 
-		std::ostringstream os;
-		os << fileName << ".png";
-		const char* stringOut = (os.str()).c_str();
+		//remove extension from filename
+		//std::string fileWithoutExtension = remove_extension_from_file(fileName);
+		
+		const char* stringOut = fileName;
 		
 		//write image
 		if (normalisationScalar>0)	//for better visulisation of results
@@ -197,8 +213,11 @@ void write_shift_map(nTupleVolume *shiftVol, const char *fileName)
 	//set maximum value to normalisationScalar
 	shiftVolColour->multiply((imageDataType)255);
 	
+	//remove extension from filename
+	std::string fileWithoutExtension = remove_extension_from_file(fileName);
+	
 	std::ostringstream os;
-	os << fileName << "_shift_map.png";
+	os << fileWithoutExtension << "_shift_map.png";
 	const char* stringOut = (os.str()).c_str();
 	
   	readWriteSuccess = write_png_f32((char*)stringOut, shiftVolColour->get_data_ptr(),

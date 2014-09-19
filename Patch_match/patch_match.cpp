@@ -6,7 +6,7 @@
 //this function calculates a nearest neighbour field, from imgVolA to imgVolB
 void patch_match_ANN(nTupleVolume *imgVolA, nTupleVolume *imgVolB, 
         nTupleVolume *dispField, nTupleVolume *imgVolOcc,nTupleVolume *imgVolMod,
-        const parameterStruct *params,nTupleVolume *firstGuessVol)
+        const patchMatchParameterStruct *params,nTupleVolume *firstGuessVol)
 {
 	//decalarations
     long startTime,stopTime;//clock_t startTime;

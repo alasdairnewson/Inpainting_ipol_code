@@ -17,11 +17,27 @@
 #define SUBSAMPLE_FACTOR 2
 #endif
 
+    typedef struct paramInpaint
+	{
+		float residualThreshold;
+		int maxIterations;
+		int nLevels;
+		bool useFeatures;
+	}inpaintingParameterStruct;
 
-parameterStruct* initialise_patch_match_parameters(int patchSizeX, int patchSizeY, int imgSizeX, int imgSizeY);
+patchMatchParameterStruct* initialise_patch_match_parameters(int patchSizeX, int patchSizeY, int imgSizeX, int imgSizeY);
+inpaintingParameterStruct* initialise_inpainting_parameters(int nLevels, bool useFeatures, float residualThreshold, int maxIterations);
+
 void initialise_inpainting(nTupleVolume *imgVol, nTupleVolume *occVol, featurePyramid featuresVolPyramid,
-					nTupleVolume *shiftVol, parameterStruct *patchMatchParams);
-void inpaint_image(const char *fileIn,const char *fileOccIn, const char *fileOut, bool useFeatures);
+					nTupleVolume *shiftVol, patchMatchParameterStruct *patchMatchParams);
+
+void inpaint_image_wrapper(const char *fileIn,const char *fileOccIn, const char *fileOut, int patchSizeX, int patchSizeY, int nLevels, bool useFeatures);
+void inpaint_image_wrapper(float *inputImage, int nx, int ny, int nc,
+	float *inputOcc, int nOccx, int nOccy, int nOccc,
+	const char *fileOut, int patchSizeX, int patchSizeY, int nLevels, bool useFeatures);
+						
+nTupleVolume * inpaint_image( nTupleVolume *imgVolIn, nTupleVolume *occVolIn,
+patchMatchParameterStruct *patchMatchParams, inpaintingParameterStruct *inpaintingParameters);
 
 
 #endif

@@ -142,7 +142,7 @@ void patch_index_to_sub(nTupleVolume *imgVol, int patchIndex, int *colourInd,int
 							- (*yInd)*(imgVol->nTupleSize) );
 }
 
-void show_patch_match_parameters(parameterStruct *patchMatchParams)
+void show_patch_match_parameters(patchMatchParameterStruct *patchMatchParams)
 {
 	MY_PRINTF("Patch size x : %d\n", patchMatchParams->patchSizeX);
 	MY_PRINTF("Patch size y : %d\n", patchMatchParams->patchSizeY);
@@ -168,7 +168,7 @@ int check_in_boundaries( nTupleVolume *imgVol, int x, int y, int t)
 }
 
 //check if the pixel is in the inner boundary : that is, none of the pixels in the patch centred on this pixel are outside of the image boundary 
-int check_in_inner_boundaries( nTupleVolume *imgVol, int x, int y, int t, const parameterStruct *params)
+int check_in_inner_boundaries( nTupleVolume *imgVol, int x, int y, int t, const patchMatchParameterStruct *params)
 {
 
 	int hPatchSizeX = imgVol->hPatchSizeX;

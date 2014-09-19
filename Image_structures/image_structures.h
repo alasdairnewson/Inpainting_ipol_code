@@ -153,7 +153,7 @@
             void binarise();
 	};
 	
-    typedef struct param
+    typedef struct paramPM
 	{
 		//patch sizes
         int patchSizeX;
@@ -168,7 +168,7 @@
         //texture attributes
         nTupleVolume *normGradX;
         nTupleVolume *normGradY;
-	}parameterStruct;
+	}patchMatchParameterStruct;
 	
 	typedef nTupleVolume** nTupleVolumePyramid;
 	
@@ -194,10 +194,10 @@ long getMilliSecs();
 
 float pow_int(float a, int b);
 
-void show_patch_match_parameters(parameterStruct *patchMatchParams);
+void show_patch_match_parameters(patchMatchParameterStruct *patchMatchParams);
 
 int check_in_boundaries( nTupleVolume *imgVol, int x, int y, int t);
-int check_in_inner_boundaries( nTupleVolume *imgVol, int x, int y, int t, const parameterStruct *params);
+int check_in_inner_boundaries( nTupleVolume *imgVol, int x, int y, int t, const patchMatchParameterStruct *params);
 void clamp_coordinates(nTupleVolume* imgVolA, int *x, int *y, int *t);
 
 //copy nTupleValues from imgVolA(xA,yA,tA) to imgVolB(xB,yB,tB)

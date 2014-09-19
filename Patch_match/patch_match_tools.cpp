@@ -19,7 +19,7 @@ bool check_already_used_patch( nTupleVolume *dispField, int x, int y, int t, int
 }
 
 //see if the maximum shift distance is respected
-bool check_max_shift_distance(int xShift, int yShift, int tShift, const parameterStruct *params)
+bool check_max_shift_distance(int xShift, int yShift, int tShift, const patchMatchParameterStruct *params)
 {
 	int distance;
 	
@@ -44,7 +44,7 @@ int check_is_occluded( nTupleVolume *imgVolOcc, int x, int y, int t)
 }
 
 void calclulate_patch_distances(nTupleVolume *departVolume,nTupleVolume *arrivalVolume,nTupleVolume *dispField, nTupleVolume *occVol,
-		const parameterStruct *params)
+		const patchMatchParameterStruct *params)
 {
 	for (int k=0; k< (dispField->tSize); k++)
 		for (int j=0; j< (dispField->ySize); j++)
@@ -68,7 +68,7 @@ void calclulate_patch_distances(nTupleVolume *departVolume,nTupleVolume *arrival
 }
 
 float calclulate_patch_error(nTupleVolume *departVolume,nTupleVolume *arrivalVolume,nTupleVolume *dispField, nTupleVolume *occVol,
-		int xA, int yA, int tA, float minError, const parameterStruct *params)
+		int xA, int yA, int tA, float minError, const patchMatchParameterStruct *params)
 {
 	int xB, yB, tB;
 	float errorOut;
@@ -81,7 +81,7 @@ float calclulate_patch_error(nTupleVolume *departVolume,nTupleVolume *arrivalVol
 	return(errorOut);
 }
 
-int check_disp_field(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume, nTupleVolume *occVol, const parameterStruct *params)
+int check_disp_field(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume, nTupleVolume *occVol, const patchMatchParameterStruct *params)
 {
 	int dispValX,dispValY,dispValT,hPatchSizeX,hPatchSizeY,hPatchSizeT;
 	int xB,yB,tB;
@@ -125,7 +125,7 @@ int check_disp_field(nTupleVolume *dispField, nTupleVolume *departVolume, nTuple
 }
 
 void patch_match_full_search(nTupleVolume *dispField, nTupleVolume *imgVolA,nTupleVolume *imgVolB,
-        nTupleVolume *occVol, nTupleVolume *modVol, const parameterStruct *params)
+        nTupleVolume *occVol, nTupleVolume *modVol, const patchMatchParameterStruct *params)
 {
     float minSSD,ssdTemp;
     int hPatchSizeX, hPatchSizeY, hPatchSizeT;
@@ -183,7 +183,7 @@ void patch_match_full_search(nTupleVolume *dispField, nTupleVolume *imgVolA,nTup
 }
 
 void initialise_displacement_field(nTupleVolume *dispField, nTupleVolume *departVolume, 
-            nTupleVolume *arrivalVolume, nTupleVolume *firstGuessVolume, nTupleVolume *occVol, const parameterStruct *params)
+            nTupleVolume *arrivalVolume, nTupleVolume *firstGuessVolume, nTupleVolume *occVol, const patchMatchParameterStruct *params)
 {
 	//declarations
 	int xDisp, yDisp, tDisp;
@@ -315,7 +315,7 @@ void initialise_displacement_field(nTupleVolume *dispField, nTupleVolume *depart
 }
 
 int patch_match_random_search(nTupleVolume *dispField, nTupleVolume *imgVolA, nTupleVolume *imgVolB,
-        nTupleVolume *occVol, nTupleVolume *modVol, const parameterStruct *params)
+        nTupleVolume *occVol, nTupleVolume *modVol, const patchMatchParameterStruct *params)
 {
 	//create random number seed
 	int xRand,yRand,tRand;
@@ -412,7 +412,7 @@ int patch_match_random_search(nTupleVolume *dispField, nTupleVolume *imgVolA, nT
 
 //one iteration of the propagation of the patch match algorithm
 int patch_match_propagation(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume, nTupleVolume *occVol,  
-        nTupleVolume *modVol, const parameterStruct *params, int iterationNb)
+        nTupleVolume *modVol, const patchMatchParameterStruct *params, int iterationNb)
 {
 	//declarations
 	int *correctInd;
@@ -529,7 +529,7 @@ int patch_match_propagation(nTupleVolume *dispField, nTupleVolume *departVolume,
 /******************************************/
 
 int patch_match_one_iteration_patch_level(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume,
-        nTupleVolume *occVol, nTupleVolume *modVol, const parameterStruct *params, int iterationNb)
+        nTupleVolume *occVol, nTupleVolume *modVol, const patchMatchParameterStruct *params, int iterationNb)
 {
 	int wMax, zMax;
 	//calculate the maximum z (patch search index)
@@ -561,7 +561,7 @@ int patch_match_one_iteration_patch_level(nTupleVolume *dispField, nTupleVolume 
 }
 
 int patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume *imgVolA, nTupleVolume *imgVolB,
-        nTupleVolume *occVol, nTupleVolume *modVol, const parameterStruct *params, int i, int j, int k,
+        nTupleVolume *occVol, nTupleVolume *modVol, const patchMatchParameterStruct *params, int i, int j, int k,
         nTupleVolume *wValues)
 {
 	//create random number seed
@@ -638,7 +638,7 @@ int patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume 
 
 //one iteration of the propagation of the patch match algorithm, for a SINGLE patch
 int patch_match_propagation_patch_level(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume, nTupleVolume *occVol,  
-        nTupleVolume *modVol, const parameterStruct *params, int iterationNb, int i, int j, int k)
+        nTupleVolume *modVol, const patchMatchParameterStruct *params, int iterationNb, int i, int j, int k)
 {
 	//declarations
 	int *correctInd;
@@ -721,7 +721,7 @@ int patch_match_propagation_patch_level(nTupleVolume *dispField, nTupleVolume *d
 // 2 : before/after
 float get_min_correct_error(nTupleVolume *dispField,nTupleVolume *departVol,nTupleVolume *arrivalVol, nTupleVolume *occVol,
 							int x, int y, int t, int beforeOrAfter, int *correctInd, float *minVector, float minError,
-                            const parameterStruct *params)
+                            const patchMatchParameterStruct *params)
 {
 	float minVal;
 	int i;

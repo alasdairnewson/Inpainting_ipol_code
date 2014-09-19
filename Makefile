@@ -11,7 +11,7 @@ RECONSTRUCTIONSOURCE = Reconstruction/reconstruct_image_and_features.cpp Reconst
 RECONSTRUCTIONHEADERS = Reconstruction/reconstruct_image_and_features.h Reconstruction/reconstruct_image.h Reconstruction/reconstruct_image_tools.h Reconstruction/common_reconstruct_image.h
 DEBUG = -g #-pg
 OPENMPFLAG = -fopenmp
-CXXFLAGS= -Wall -Wextra -O2 -stdlib=libstdc++ ##
+CXXFLAGS= -Wall -Wextra -O2 -stdlib=libstdc++ # $(DEBUG) 
 LIB=-L/usr/informix/lib/c++
 INC= -IReconstruction/ -IPatch_match/ -IImage_structures/
 

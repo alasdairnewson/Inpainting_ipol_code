@@ -2,9 +2,9 @@
 
 #include "image_inpainting.h"
 
-parameterStruct * initialise_patch_match_parameters(int patchSizeX, int patchSizeY, int imgSizeX, int imgSizeY)
+patchMatchParameterStruct * initialise_patch_match_parameters(int patchSizeX, int patchSizeY, int imgSizeX, int imgSizeY)
 {
-	parameterStruct *patchMatchParams = new parameterStruct;
+	patchMatchParameterStruct *patchMatchParams = new patchMatchParameterStruct;
 
 	//set parameter structure
 	patchMatchParams->patchSizeX = patchSizeX;
@@ -20,20 +20,26 @@ parameterStruct * initialise_patch_match_parameters(int patchSizeX, int patchSiz
 	patchMatchParams->normGradX = NULL;
 	patchMatchParams->normGradY = NULL;
 	
-	return(patchMatchParams);
-	
+	return(patchMatchParams);	
 }
 
-void inpaint_image(const char *fileIn,const char *fileOccIn, const char *fileOut, bool useFeatures)
+inpaintingParameterStruct * initialise_inpainting_parameters(int nLevels, bool useFeatures, float residualThreshold, int maxIterations)
 {
-	//algorithm parameters
-	int patchSizeX = 3;
-	int patchSizeY = 3;
-	int nLevels = -1;
-	int maxShiftDistance = -1;
-	float residualThreshold = 0.1;
-	int maxIterations = 10;
-	
+	inpaintingParameterStruct *inpaintingParams = new inpaintingParameterStruct;
+
+	//set inpainting parameter structure
+	inpaintingParams->nLevels = nLevels;
+	inpaintingParams->useFeatures = useFeatures;
+	inpaintingParams->residualThreshold = residualThreshold;
+	inpaintingParams->maxIterations = maxIterations;
+
+	return(inpaintingParams);	
+}
+
+void inpaint_image_wrapper(const char *fileIn,const char *fileOccIn, const char *fileOut,
+			int patchSizeX, int patchSizeY, int nLevels, bool useFeatures)
+{
+
 	// *************************** //
 	// ***** READ INPUTS ********* //
 	// ************************** //
@@ -41,9 +47,28 @@ void inpaint_image(const char *fileIn,const char *fileOccIn, const char *fileOut
 	size_t nx,ny,nc;
 	size_t nOccX,nOccY,nOccC;
 	float *inputImage = read_image(fileIn,&nx,&ny,&nc);
-	nTupleVolume *imgVolIn = new nTupleVolume(nc,nx,ny,patchSizeX,patchSizeY,IMAGE_INDEXING,inputImage);
 	//read input occlusion
 	float *inputOcc = read_image(fileOccIn,&nOccX,&nOccY,&nOccC);
+	
+	
+	// ****************************************** //
+	// **** INITIALISE PATCHMATCH PARAMETERS **** //
+	// ****************************************** //
+	patchMatchParameterStruct *patchMatchParams = initialise_patch_match_parameters(patchSizeX, patchSizeY, nx, ny);
+	
+	// ****************************************** //
+	// **** INITIALISE INPAINTING PARAMETERS **** //
+	// ****************************************** //
+	float residualThreshold = 0.1;
+	int maxIterations = 10;
+	inpaintingParameterStruct *inpaintingParameters =
+		initialise_inpainting_parameters(nLevels, useFeatures, residualThreshold, maxIterations);
+	
+	// ******************************** //
+	// ***** CREATE IMAGE STRUCTURES*** //
+	// ******************************** //
+	
+	nTupleVolume *imgVolIn = new nTupleVolume(nc,nx,ny,patchSizeX,patchSizeY,IMAGE_INDEXING,inputImage);
 	nTupleVolume *occVolIn;
 	if (nOccC == 3)		//if we need to convert the input occlusion
 	{
@@ -55,27 +80,85 @@ void inpaint_image(const char *fileIn,const char *fileOccIn, const char *fileOut
 		occVolIn = new nTupleVolume(1,nOccX,nOccY,patchSizeX,patchSizeY,IMAGE_INDEXING,inputOcc);
 	
 	occVolIn->binarise();
+
+	// ***** CALL MAIN ROUTINE **** //
 	
+	nTupleVolume * imgOut = inpaint_image(imgVolIn, occVolIn, patchMatchParams, inpaintingParameters);
+
+	//write output
+	write_image(imgOut,fileOut,255);
+	delete(imgOut);
+}
+
+void inpaint_image_wrapper(float *inputImage, int nx, int ny, int nc,
+	float *inputOcc, int nOccX, int nOccY, int nOccC,
+	const char *fileOut, int patchSizeX, int patchSizeY, int nLevels, bool useFeatures)
+{
+
+	// ****************************************** //
+	// **** INITIALISE PATCHMATCH PARAMETERS **** //
+	// ****************************************** //
+	patchMatchParameterStruct *patchMatchParams = initialise_patch_match_parameters(patchSizeX, patchSizeY, nx, ny);
+
+	// ****************************************** //
+	// **** INITIALISE INPAINTING PARAMETERS **** //
+	// ****************************************** //
+	float residualThreshold = 0.1;
+	int maxIterations = 10;
+	inpaintingParameterStruct *inpaintingParameters = initialise_inpainting_parameters(nLevels, useFeatures, residualThreshold, maxIterations);
+
+	// ******************************** //
+	// ***** CREATE IMAGE STRUCTURES*** //
+	// ******************************** //
+	
+	nTupleVolume *imgVolIn = new nTupleVolume(nc,nx,ny,patchSizeX,patchSizeY,IMAGE_INDEXING,inputImage);
+	nTupleVolume *occVolIn;
+	if (nOccC == 3)		//if we need to convert the input occlusion
+	{
+		nTupleVolume *occVolTemp = new nTupleVolume(nOccC,nOccX,nOccY,patchSizeX,patchSizeY,IMAGE_INDEXING,inputOcc);
+		occVolIn = rgb_to_grey(occVolTemp);
+		delete(occVolTemp);
+	}
+	else
+		occVolIn = new nTupleVolume(1,nOccX,nOccY,patchSizeX,patchSizeY,IMAGE_INDEXING,inputOcc);
+	
+	occVolIn->binarise();
+
+	// ***** CALL MAIN ROUTINE **** //
+	
+	nTupleVolume * imgOut = inpaint_image(imgVolIn, occVolIn, patchMatchParams, inpaintingParameters);
+
+	//write output
+	write_image(imgOut,fileOut,255);
+	delete(imgOut);
+}
+
+nTupleVolume * inpaint_image( nTupleVolume *imgVolIn, nTupleVolume *occVolIn,
+patchMatchParameterStruct *patchMatchParams, inpaintingParameterStruct *inpaintingParameters)
+{
 	
 	// ******************************************************************** //
 	// **** AUTOMATICALLY DETERMINE NUMBER OF LEVELS, IF NOT SPECIFIED **** //
 	// ******************************************************************** //
-	if (nLevels == -1)
+	if (inpaintingParameters->nLevels == -1)
 	{
-		nLevels = determine_multiscale_level_number(occVolIn,patchSizeX,patchSizeY);
+		inpaintingParameters->nLevels =
+			determine_multiscale_level_number(occVolIn,imgVolIn->patchSizeX,imgVolIn->patchSizeY);
 	}
-	MY_PRINTF("Number of levels : %d \n",nLevels);
+	MY_PRINTF("Number of levels : %d \n",inpaintingParameters->nLevels);
+	
+	nTupleVolume *imgVolOut;
 
 	// ************************** //
 	// **** CREATE PYRDAMIDS **** //
 	// ************************** //
-	nTupleVolumePyramid imgVolPyramid = create_nTupleVolume_pyramid(imgVolIn, nLevels);
-	nTupleVolumePyramid occVolPyramid = create_nTupleVolume_pyramid_binary(occVolIn, nLevels);
+	nTupleVolumePyramid imgVolPyramid = create_nTupleVolume_pyramid(imgVolIn, inpaintingParameters->nLevels);
+	nTupleVolumePyramid occVolPyramid = create_nTupleVolume_pyramid_binary(occVolIn, inpaintingParameters->nLevels);
 	featurePyramid featuresVolPyramid;
-	if (useFeatures == true)
+	if (inpaintingParameters->useFeatures == true)
 	{
 		double t1 = clock();
-		featuresVolPyramid = create_feature_pyramid(imgVolIn, occVolIn, nLevels);
+		featuresVolPyramid = create_feature_pyramid(imgVolIn, occVolIn, inpaintingParameters->nLevels);
 		MY_PRINTF("\n\nFeatures calculation time: %f\n",((double)(clock()-t1)) / CLOCKS_PER_SEC);
 	}
 	else
@@ -87,12 +170,6 @@ void inpaint_image(const char *fileIn,const char *fileOccIn, const char *fileOut
 
 	//create structuring element
 	nTupleVolume *structElDilate = create_structuring_element("rectangle", imgVolIn->patchSizeX, imgVolIn->patchSizeY);
-
-	// ****************************************** //
-	// **** INITIALISE PATCHMATCH PARAMETERS **** //
-	// ****************************************** //
-	
-	parameterStruct *patchMatchParams = initialise_patch_match_parameters(patchSizeX, patchSizeY, nx, ny);
 	
 	//show_patch_match_parameters(patchMatchParams);
 	
@@ -102,12 +179,13 @@ void inpaint_image(const char *fileIn,const char *fileOccIn, const char *fileOut
 	
 	nTupleVolume *imgVol,*normGradXvol,*normGradYvol;
 	nTupleVolume *shiftVol=NULL;
-	for (int level=(nLevels-1); level>=0; level--)
+	for (int level=( (inpaintingParameters->nLevels)-1); level>=0; level--)
 	{
 		nTupleVolume *imgVolPrevious,*occVol,*occVolDilate;
 
-		if (maxShiftDistance != -1)		
-			patchMatchParams->maxShiftDistance = (float)( (maxShiftDistance)/( pow((float)SUBSAMPLE_FACTOR,(float)level) ));
+		if (patchMatchParams->maxShiftDistance != -1)		
+			patchMatchParams->maxShiftDistance =
+			(float)( (patchMatchParams->maxShiftDistance)/( pow((float)SUBSAMPLE_FACTOR,(float)level) ));
 		
 		imgVol = copy_image_nTuple(imgVolPyramid[level]);
 		occVol = copy_image_nTuple(occVolPyramid[level]);
@@ -124,7 +202,7 @@ void inpaint_image(const char *fileIn,const char *fileOccIn, const char *fileOut
 		}
 					
 		//initialise solution
-		if (level == (nLevels-1))
+		if (level == ((inpaintingParameters->nLevels)-1))
 		{
 			shiftVol = new nTupleVolume(4,imgVol->xSize,imgVol->ySize,imgVol->patchSizeX,imgVol->patchSizeY,IMAGE_INDEXING);
 			shiftVol->set_all_image_values(0);
@@ -149,6 +227,7 @@ void inpaint_image(const char *fileIn,const char *fileOccIn, const char *fileOut
 			else
 			{
 				reconstruct_image(imgVol,imgVol,occVol,shiftVol,SIGMA_COLOUR);
+				//write_shift_map(shiftVol,fileOut);
 			}
 		}
 		
@@ -157,7 +236,7 @@ void inpaint_image(const char *fileIn,const char *fileOccIn, const char *fileOut
 		//iterate ANN search and reconstruction
 		int iterationNb = 0;
 		imageDataType residual = FLT_MAX;
-		while( (residual > residualThreshold) && (iterationNb<maxIterations) )
+		while( (residual > (inpaintingParameters->residualThreshold) ) && (iterationNb < (inpaintingParameters->maxIterations) ) )
 		{
 			//copy current imgVol
 			imgVolPrevious = copy_image_nTuple(imgVol);
@@ -186,8 +265,7 @@ void inpaint_image(const char *fileIn,const char *fileOccIn, const char *fileOut
 		else
 		{
 			reconstruct_image(imgVol,imgVol,occVol,shiftVol,SIGMA_COLOUR,3);
-			write_image(imgVol,fileOut,255);
-			write_shift_map(shiftVol,fileOut);
+			imgVolOut = new nTupleVolume(imgVol);
 		}
 		//destroy structures
 		delete(imgVol);
@@ -204,7 +282,7 @@ void inpaint_image(const char *fileIn,const char *fileOccIn, const char *fileOut
 	// ************************** //
 	// **** DELETE STRUCTURES *** //
 	// ************************** //
-	for (int i=0; i<nLevels; i++)
+	for (int i=0; i< (inpaintingParameters->nLevels); i++)
 	{
 		delete(imgVolPyramid[i]);
 		delete(occVolPyramid[i]);
@@ -215,12 +293,12 @@ void inpaint_image(const char *fileIn,const char *fileOccIn, const char *fileOut
 	delete_feature_pyramid(featuresVolPyramid);
 	delete(patchMatchParams);
 
-	return;
+	return(imgVolOut);
 }
 
 
 void initialise_inpainting(nTupleVolume *imgVol, nTupleVolume *occVol, featurePyramid featuresVolPyramid,
-				nTupleVolume *shiftVol, parameterStruct *patchMatchParams)
+				nTupleVolume *shiftVol, patchMatchParameterStruct *patchMatchParams)
 {
 	int iterNb=0;
 	char buffer [50];

@@ -12,17 +12,19 @@
 
 int main(int argc, char* argv[])
 {
+	//default parameters
+	bool useFeatures=true;
+	int patchSizeX=7,patchSizeY=7, nLevels=-1;
+
 	time_t startTime,stopTime;
 
 	const char *fileIn = (argc >= 2) ? argv[1] : "American.png";
 	const char *fileInOcc = (argc >= 3) ? argv[2] : "American_occlusion.png";
 	const char *fileOut = (argc >= 4) ? argv[3] : "American_inpainted";
 	
-	bool useFeatures=true;
-	
 	time(&startTime);//startTime = clock();
 	
-	inpaint_image(fileIn,fileInOcc,fileOut,useFeatures);
+	inpaint_image_wrapper(fileIn,fileInOcc,fileOut, patchSizeX, patchSizeY, nLevels, useFeatures);
 	
 	time(&stopTime);
 	printf("\n\nTotal execution time: %f\n",fabs(difftime(startTime,stopTime)));

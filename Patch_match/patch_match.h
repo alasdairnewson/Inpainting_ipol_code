@@ -8,6 +8,6 @@
 	#include "patch_match_tools.h"
 
 	void patch_match_ANN(nTupleVolume *imgVolA, nTupleVolume *imgVolB, nTupleVolume *shiftVol,
-        nTupleVolume *imgVolOcc, nTupleVolume *imgVolMod, const parameterStruct *params, nTupleVolume *firstGuessVol=NULL);
+        nTupleVolume *imgVolOcc, nTupleVolume *imgVolMod, const patchMatchParameterStruct *params, nTupleVolume *firstGuessVol=NULL);
         
 #endif
