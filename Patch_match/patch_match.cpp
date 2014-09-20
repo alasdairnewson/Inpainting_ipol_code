@@ -9,9 +9,8 @@ void patch_match_ANN(nTupleVolume *imgVolA, nTupleVolume *imgVolB,
         const patchMatchParameterStruct *params,nTupleVolume *firstGuessVol)
 {
 	//decalarations
-    long startTime,stopTime;//clock_t startTime;
+    long startTime;//clock_t startTime;
     long propagationTime,randomSearchTime;
-    int nbModified;
 
 	//check certain parameters
 	if((imgVolA->nTupleSize) != (imgVolB->nTupleSize) )
@@ -58,10 +57,12 @@ void patch_match_ANN(nTupleVolume *imgVolA, nTupleVolume *imgVolB,
     {
     	if (firstGuessVol!= NULL)
     	{
-		    MY_PRINTF("Initialisation\n");
+    		if ( (params->verboseMode) == true)
+		    	MY_PRINTF("Initialisation\n");
 		    long startTimeInitialisation = getMilliSecs();
 		    initialise_displacement_field(dispField, imgVolA, imgVolB, firstGuessVol, imgVolOcc,params);
-		    MY_PRINTF("Initialisation time in s: %f\n",fabs(startTimeInitialisation-getMilliSecs())/1000);
+		    if ( (params->verboseMode) == true)
+		    	MY_PRINTF("Initialisation time in s: %f\n",fabs(startTimeInitialisation-getMilliSecs())/1000);
 	    }
         //show_nTuple_volume(dispField);
         if (check_disp_field(dispField, imgVolA, imgVolB,imgVolOcc,params) == -1)
@@ -70,26 +71,11 @@ void patch_match_ANN(nTupleVolume *imgVolA, nTupleVolume *imgVolB,
         {
         	patch_match_one_iteration_patch_level(dispField, imgVolA, imgVolB,
         	imgVolOcc, imgVolMod, params, i);
-        
-            /*startTime = getMilliSecs();//time(&startTime);//startTime = clock();
-            
-            nbModified = patch_match_propagation(dispField, imgVolA, imgVolB,imgVolOcc,imgVolMod,params,i);
-            stopTime = getMilliSecs();////time(&stopTime);
-            propagationTime = propagationTime + (stopTime-startTime);
-            //MY_PRINTF("Iteration %d, propagation. Nbmodified : %d\n",i,nbModified);
-                        
-            startTime = getMilliSecs();//time(&startTime);
-            
-        	nbModified = patch_match_random_search(dispField, imgVolA,imgVolB, imgVolOcc,imgVolMod,params);//nbModified = patch_match_random_search_parallel(dispField, imgVolA,imgVolB, imgVolOcc,occVolInds,imgVolMod,params);
-            stopTime = getMilliSecs();//time(&stopTime);
-            randomSearchTime = randomSearchTime + (stopTime-startTime);//randomSearchTime + double(fabs(difftime(startTime,stopTime)));
-            //MY_PRINTF("Iteration %d, random. Nbmodified : %d\n",i,nbModified);*/;
         }
     }
-    MY_PRINTF("Propagation time : %f s\n",(float)(((float)propagationTime)/1000));//propagationTime/CLOCKS_PER_SEC);
-    MY_PRINTF("Random search time : %f s\n",(float)(((float)randomSearchTime)/1000));//randomSearchTime/CLOCKS_PER_SEC);
-	MY_PRINTF("Total PatchMatch execution time in s: %f\n",fabs(startTimeTotalPatchMatch-getMilliSecs())/1000);
-	if (VERBOSE_MODE>0)
-		MY_PRINTF("Number of modified patches : %d n",nbModified);
+    if ( (params->verboseMode) == true)
+    {
+		MY_PRINTF("Total PatchMatch execution time in s: %f\n",fabs(startTimeTotalPatchMatch-getMilliSecs())/1000);
+	}
 
 }

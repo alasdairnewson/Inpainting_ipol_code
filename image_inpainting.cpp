@@ -2,7 +2,8 @@
 
 #include "image_inpainting.h"
 
-patchMatchParameterStruct * initialise_patch_match_parameters(int patchSizeX, int patchSizeY, int imgSizeX, int imgSizeY)
+patchMatchParameterStruct * initialise_patch_match_parameters(
+	int patchSizeX, int patchSizeY, int imgSizeX, int imgSizeY, bool verboseMode)
 {
 	patchMatchParameterStruct *patchMatchParams = new patchMatchParameterStruct;
 
@@ -19,11 +20,29 @@ patchMatchParameterStruct * initialise_patch_match_parameters(int patchSizeX, in
 	//texture attributes
 	patchMatchParams->normGradX = NULL;
 	patchMatchParams->normGradY = NULL;
+	patchMatchParams->verboseMode = verboseMode;
 	
 	return(patchMatchParams);	
 }
 
-inpaintingParameterStruct * initialise_inpainting_parameters(int nLevels, bool useFeatures, float residualThreshold, int maxIterations)
+void display_patch_match_parameters(patchMatchParameterStruct *patchMatchParams)
+{
+
+	printf("\n*************************\n");
+	printf("* PATCHMATCH PARAMETERS *\n");
+	printf("*************************\n");
+	
+	printf("Patch size X : %d\n",patchMatchParams->patchSizeX);
+	printf("Patch size Y : %d\n",patchMatchParams->patchSizeY);
+	printf("Number of propagation/random search iterations: %d\n",patchMatchParams->nIters);
+	printf("Random search reduction factor (alpha) : %f\n",patchMatchParams->alpha);
+	printf("Maximum search shift allowed (-1 for whole image) : %f\n",patchMatchParams->maxShiftDistance);
+	printf("Full search (should be activated only for experimental purposes !! : %d\n",patchMatchParams->fullSearch);
+	printf("Verbose mode : %d\n",patchMatchParams->verboseMode);
+}
+
+inpaintingParameterStruct * initialise_inpainting_parameters(int nLevels, bool useFeatures,
+	float residualThreshold, int maxIterations)
 {
 	inpaintingParameterStruct *inpaintingParams = new inpaintingParameterStruct;
 
@@ -32,12 +51,28 @@ inpaintingParameterStruct * initialise_inpainting_parameters(int nLevels, bool u
 	inpaintingParams->useFeatures = useFeatures;
 	inpaintingParams->residualThreshold = residualThreshold;
 	inpaintingParams->maxIterations = maxIterations;
-
+	
 	return(inpaintingParams);	
 }
 
+
+void display_inpainting_parameters(inpaintingParameterStruct *inpaintingParams)
+{
+	printf("\n*************************\n");
+	printf("* INPAINTING PARAMETERS *\n");
+	printf("*************************\n");
+
+	printf("Number of levels : %d\n",inpaintingParams->nLevels);
+	printf("Use features : %d\n",inpaintingParams->useFeatures);
+	printf("Residual threshold: %f\n",inpaintingParams->residualThreshold);
+	printf("Maximum number of iterations: %d\n",inpaintingParams->maxIterations);
+	
+	printf("*************************\n\n");
+
+}
+
 void inpaint_image_wrapper(const char *fileIn,const char *fileOccIn, const char *fileOut,
-			int patchSizeX, int patchSizeY, int nLevels, bool useFeatures)
+			int patchSizeX, int patchSizeY, int nLevels, bool useFeatures, bool verboseMode)
 {
 
 	// *************************** //
@@ -54,14 +89,14 @@ void inpaint_image_wrapper(const char *fileIn,const char *fileOccIn, const char 
 	// ****************************************** //
 	// **** INITIALISE PATCHMATCH PARAMETERS **** //
 	// ****************************************** //
-	patchMatchParameterStruct *patchMatchParams = initialise_patch_match_parameters(patchSizeX, patchSizeY, nx, ny);
+	patchMatchParameterStruct *patchMatchParams = initialise_patch_match_parameters(patchSizeX, patchSizeY, nx, ny, verboseMode);
 	
 	// ****************************************** //
 	// **** INITIALISE INPAINTING PARAMETERS **** //
 	// ****************************************** //
 	float residualThreshold = 0.1;
 	int maxIterations = 10;
-	inpaintingParameterStruct *inpaintingParameters =
+	inpaintingParameterStruct *inpaintingParams =
 		initialise_inpainting_parameters(nLevels, useFeatures, residualThreshold, maxIterations);
 	
 	// ******************************** //
@@ -83,7 +118,7 @@ void inpaint_image_wrapper(const char *fileIn,const char *fileOccIn, const char 
 
 	// ***** CALL MAIN ROUTINE **** //
 	
-	nTupleVolume * imgOut = inpaint_image(imgVolIn, occVolIn, patchMatchParams, inpaintingParameters);
+	nTupleVolume * imgOut = inpaint_image(imgVolIn, occVolIn, patchMatchParams, inpaintingParams);
 
 	//write output
 	write_image(imgOut,fileOut,255);
@@ -134,31 +169,32 @@ void inpaint_image_wrapper(float *inputImage, int nx, int ny, int nc,
 }
 
 nTupleVolume * inpaint_image( nTupleVolume *imgVolIn, nTupleVolume *occVolIn,
-patchMatchParameterStruct *patchMatchParams, inpaintingParameterStruct *inpaintingParameters)
+patchMatchParameterStruct *patchMatchParams, inpaintingParameterStruct *inpaintingParams)
 {
 	
 	// ******************************************************************** //
 	// **** AUTOMATICALLY DETERMINE NUMBER OF LEVELS, IF NOT SPECIFIED **** //
 	// ******************************************************************** //
-	if (inpaintingParameters->nLevels == -1)
+	if (inpaintingParams->nLevels == -1)
 	{
-		inpaintingParameters->nLevels =
+		inpaintingParams->nLevels =
 			determine_multiscale_level_number(occVolIn,imgVolIn->patchSizeX,imgVolIn->patchSizeY);
 	}
-	MY_PRINTF("Number of levels : %d \n",inpaintingParameters->nLevels);
+	display_inpainting_parameters(inpaintingParams);
+	display_patch_match_parameters(patchMatchParams);
 	
 	nTupleVolume *imgVolOut;
 
 	// ************************** //
 	// **** CREATE PYRDAMIDS **** //
 	// ************************** //
-	nTupleVolumePyramid imgVolPyramid = create_nTupleVolume_pyramid(imgVolIn, inpaintingParameters->nLevels);
-	nTupleVolumePyramid occVolPyramid = create_nTupleVolume_pyramid_binary(occVolIn, inpaintingParameters->nLevels);
+	nTupleVolumePyramid imgVolPyramid = create_nTupleVolume_pyramid(imgVolIn, inpaintingParams->nLevels);
+	nTupleVolumePyramid occVolPyramid = create_nTupleVolume_pyramid_binary(occVolIn, inpaintingParams->nLevels);
 	featurePyramid featuresVolPyramid;
-	if (inpaintingParameters->useFeatures == true)
+	if (inpaintingParams->useFeatures == true)
 	{
 		double t1 = clock();
-		featuresVolPyramid = create_feature_pyramid(imgVolIn, occVolIn, inpaintingParameters->nLevels);
+		featuresVolPyramid = create_feature_pyramid(imgVolIn, occVolIn, inpaintingParams->nLevels);
 		MY_PRINTF("\n\nFeatures calculation time: %f\n",((double)(clock()-t1)) / CLOCKS_PER_SEC);
 	}
 	else
@@ -179,8 +215,9 @@ patchMatchParameterStruct *patchMatchParams, inpaintingParameterStruct *inpainti
 	
 	nTupleVolume *imgVol,*normGradXvol,*normGradYvol;
 	nTupleVolume *shiftVol=NULL;
-	for (int level=( (inpaintingParameters->nLevels)-1); level>=0; level--)
+	for (int level=( (inpaintingParams->nLevels)-1); level>=0; level--)
 	{
+		printf("Current pyramid level : %d\n",level);
 		nTupleVolume *imgVolPrevious,*occVol,*occVolDilate;
 
 		if (patchMatchParams->maxShiftDistance != -1)		
@@ -202,13 +239,14 @@ patchMatchParameterStruct *patchMatchParams, inpaintingParameterStruct *inpainti
 		}
 					
 		//initialise solution
-		if (level == ((inpaintingParameters->nLevels)-1))
+		if (level == ((inpaintingParams->nLevels)-1))
 		{
 			shiftVol = new nTupleVolume(4,imgVol->xSize,imgVol->ySize,imgVol->patchSizeX,imgVol->patchSizeY,IMAGE_INDEXING);
 			shiftVol->set_all_image_values(0);
+			printf("\nInitialisation started\n\n\n");
 			initialise_inpainting(imgVol,occVol,featuresVolPyramid,shiftVol,patchMatchParams);
 			patchMatchParams->partialComparison = 0;
-			MY_PRINTF("\nInitialisation finished\n\n\n");
+			printf("\nInitialisation finished\n\n\n");
 			
 			if (featuresVolPyramid.nLevels >= 0)	//retrieve features from the pointers in the patchMatch parameters
 			{
@@ -236,7 +274,7 @@ patchMatchParameterStruct *patchMatchParams, inpaintingParameterStruct *inpainti
 		//iterate ANN search and reconstruction
 		int iterationNb = 0;
 		imageDataType residual = FLT_MAX;
-		while( (residual > (inpaintingParameters->residualThreshold) ) && (iterationNb < (inpaintingParameters->maxIterations) ) )
+		while( (residual > (inpaintingParams->residualThreshold) ) && (iterationNb < (inpaintingParams->maxIterations) ) )
 		{
 			//copy current imgVol
 			imgVolPrevious = copy_image_nTuple(imgVol);
@@ -250,7 +288,8 @@ patchMatchParameterStruct *patchMatchParams, inpaintingParameterStruct *inpainti
 			else
 				reconstruct_image(imgVol,imgVol,occVol,shiftVol,SIGMA_COLOUR);
 			residual = calculate_residual(imgVol,imgVolPrevious,occVol);
-			MY_PRINTF("Iteration number %d, residual = %f\n",iterationNb,residual);
+			if (patchMatchParams->verboseMode == true)
+				printf("Iteration number %d, residual = %f\n",iterationNb,residual);
 			iterationNb++;
 		}
 		//upsample shift volume, if we are not on the finest level
@@ -282,7 +321,7 @@ patchMatchParameterStruct *patchMatchParams, inpaintingParameterStruct *inpainti
 	// ************************** //
 	// **** DELETE STRUCTURES *** //
 	// ************************** //
-	for (int i=0; i< (inpaintingParameters->nLevels); i++)
+	for (int i=0; i< (inpaintingParams->nLevels); i++)
 	{
 		delete(imgVolPyramid[i]);
 		delete(occVolPyramid[i]);
@@ -292,6 +331,8 @@ patchMatchParameterStruct *patchMatchParams, inpaintingParameterStruct *inpainti
 	delete(shiftVol);
 	delete_feature_pyramid(featuresVolPyramid);
 	delete(patchMatchParams);
+	
+	printf("Inpainting finished !\n");
 
 	return(imgVolOut);
 }
@@ -301,7 +342,6 @@ void initialise_inpainting(nTupleVolume *imgVol, nTupleVolume *occVol, featurePy
 				nTupleVolume *shiftVol, patchMatchParameterStruct *patchMatchParams)
 {
 	int iterNb=0;
-	char buffer [50];
 	patchMatchParams->partialComparison = 1;
 	bool initialisation = true;
 	nTupleVolume *occVolIter;
@@ -376,15 +416,10 @@ void initialise_inpainting(nTupleVolume *imgVol, nTupleVolume *occVol, featurePy
 		}
 		
 		iterNb++;
-		MY_PRINTF("\n Initialisation iteration number : %d \n",iterNb);
+		if (patchMatchParams->verboseMode == true)
+			printf("\n Initialisation iteration number : %d \n",iterNb);
 		delete(occVolPatchMatch);
 		delete(occVolReconstruct);
-
-		/*char fileName[512];
-		std::ostringstream os;
-		os << fileName << "iteration_" << iterNb;
-		const char* stringOut = (os.str()).c_str();
-		write_image(imgVol,stringOut,255);*/
 		
 		//copy the information from the eroded occlusion to the current occlusion (occVolIter)
 		delete(occVolIter);

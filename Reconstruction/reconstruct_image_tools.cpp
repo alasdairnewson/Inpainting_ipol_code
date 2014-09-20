@@ -4,7 +4,7 @@ colour estimation*/
 
 #include "reconstruct_image_tools.h"
 
-int check_disp_field(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume, nTupleVolume *occVol)
+int check_disp_field(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume)
 {
 	int dispValX,dispValY,dispValT,hPatchSizeX,hPatchSizeY,hPatchSizeT;
 	int xB,yB,tB;
@@ -82,7 +82,7 @@ float get_adaptive_sigma(float *weights, int weightsLength, float sigmaPercentil
 
 /*this function retieves the highest mode in the colour space of the
  different colours available for reconstructing a pixel*/
-int estimate_best_colour(nTupleVolume *imgVol, nTupleVolume *imgVolModified,float *weights, int weightsLength,
+int estimate_best_colour(nTupleVolume *imgVol, float *weights, int weightsLength,
                                 float *colours, int i, int j, int k)
 {
     int ii;
@@ -104,9 +104,9 @@ int estimate_best_colour(nTupleVolume *imgVol, nTupleVolume *imgVolModified,floa
         }
     }
 
-    imgVolModified->set_value(i,j,k,0,(imageDataType)(colours[minWeightInd]));
-    imgVolModified->set_value(i,j,k,1,(imageDataType)(colours[minWeightInd+weightsLength]));
-    imgVolModified->set_value(i,j,k,2,(imageDataType)(colours[minWeightInd+2*weightsLength]));
+    imgVol->set_value(i,j,k,0,(imageDataType)(colours[minWeightInd]));
+    imgVol->set_value(i,j,k,1,(imageDataType)(colours[minWeightInd+weightsLength]));
+    imgVol->set_value(i,j,k,2,(imageDataType)(colours[minWeightInd+2*weightsLength]));
     
     return(1);
 }

@@ -56,7 +56,7 @@ void calclulate_patch_distances(nTupleVolume *departVolume,nTupleVolume *arrival
 					xShift = dispField->get_value(i,j,k,0);
 					yShift = dispField->get_value(i,j,k,1);
 					tShift = dispField->get_value(i,j,k,2);
-					float ssdTemp = ssd_patch_measure(departVolume, arrivalVolume,dispField,occVol, i, j, k, i+xShift, j+yShift, k+tShift, -1, params);
+					float ssdTemp = ssd_patch_measure(departVolume, arrivalVolume,occVol, i, j, k, i+xShift, j+yShift, k+tShift, -1, params);
 					dispField->set_value(i,j,k,3,ssdTemp);
 				}
 				else
@@ -77,7 +77,7 @@ float calclulate_patch_error(nTupleVolume *departVolume,nTupleVolume *arrivalVol
 	yB = (yA) + (int)dispField->get_value(xA,yA,tA,1);
 	tB = (tA) + (int)dispField->get_value(xA,yA,tA,2);
 
-	errorOut = ssd_patch_measure(departVolume, arrivalVolume,dispField,occVol, xA, yA, tA, xB, yB, tB, minError, params);
+	errorOut = ssd_patch_measure(departVolume, arrivalVolume,occVol, xA, yA, tA, xB, yB, tB, minError, params);
 	return(errorOut);
 }
 
@@ -160,7 +160,7 @@ void patch_match_full_search(nTupleVolume *dispField, nTupleVolume *imgVolA,nTup
                             if (check_max_shift_distance(ii-i,jj-j,kk-k,params) == false)
                             	continue;
 
-                            ssdTemp = ssd_patch_measure(imgVolA, imgVolB, dispField,occVol, i, j, k,ii, jj, kk, minSSD,params);
+                            ssdTemp = ssd_patch_measure(imgVolA, imgVolB,occVol, i, j, k,ii, jj, kk, minSSD,params);
                             if ( (ssdTemp != -1) && (ssdTemp <= minSSD))   //we have a new best match
                             {
                                 minSSD = ssdTemp;
@@ -304,7 +304,7 @@ void initialise_displacement_field(nTupleVolume *dispField, nTupleVolume *depart
 
                 if (check_in_inner_boundaries(departVolume,i,j,k,params))
                 {
-                    ssdTemp = ssd_patch_measure(departVolume, arrivalVolume, dispField,occVol, i, j, k, i+xDisp, j+yDisp, k+tDisp, -1,params);
+                    ssdTemp = ssd_patch_measure(departVolume, arrivalVolume,occVol, i, j, k, i+xDisp, j+yDisp, k+tDisp, -1,params);
                     if(ssdTemp ==-1)
                         ssdTemp = FLT_MAX;
                 }
@@ -386,7 +386,7 @@ int patch_match_random_search(nTupleVolume *dispField, nTupleVolume *imgVolA, nT
                     if (check_max_shift_distance( (xRand-i),(yRand-j),(tRand-k),params) == false)
                     	continue;	//the new position is too far away
 
-                    ssdTemp =  ssd_patch_measure(imgVolA, imgVolB, dispField,occVol, i, j, k, xRand, yRand, tRand, ssdTemp,params);
+                    ssdTemp =  ssd_patch_measure(imgVolA, imgVolB,occVol, i, j, k, xRand, yRand, tRand, ssdTemp,params);
 
                     if (ssdTemp != -1)	//we have a better match
                     {
@@ -528,7 +528,7 @@ int patch_match_propagation(nTupleVolume *dispField, nTupleVolume *departVolume,
 /******************************************/
 /******************************************/
 
-int patch_match_one_iteration_patch_level(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume,
+void patch_match_one_iteration_patch_level(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume,
         nTupleVolume *occVol, nTupleVolume *modVol, const patchMatchParameterStruct *params, int iterationNb)
 {
 	int wMax, zMax;
@@ -551,7 +551,7 @@ int patch_match_one_iteration_patch_level(nTupleVolume *dispField, nTupleVolume 
 			{
 				//propagation
 				patch_match_propagation_patch_level(dispField, departVolume, arrivalVolume, occVol,  
-        		modVol, params, iterationNb, i, j, k);
+        		params, iterationNb, i, j, k);
 				
 				//random search
 				patch_match_random_search_patch_level(dispField, departVolume, arrivalVolume,
@@ -560,7 +560,7 @@ int patch_match_one_iteration_patch_level(nTupleVolume *dispField, nTupleVolume 
 	delete wValues;
 }
 
-int patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume *imgVolA, nTupleVolume *imgVolB,
+void patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume *imgVolA, nTupleVolume *imgVolB,
         nTupleVolume *occVol, nTupleVolume *modVol, const patchMatchParameterStruct *params, int i, int j, int k,
         nTupleVolume *wValues)
 {
@@ -571,7 +571,6 @@ int patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume 
 	int xTemp,yTemp,tTemp,wTemp;
     int *xDisp, *yDisp, *tDisp;
 	float ssdTemp;
-    int nbModified = 0;
 
 	hPatchSizeX = (int)floor((float)((dispField->patchSizeX)/2));	//half the patch size
 	hPatchSizeY = (int)floor((float)((dispField->patchSizeY)/2));	//half the patch size
@@ -583,7 +582,7 @@ int patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume 
 
 	if (modVol->xSize >0)
 		if (modVol->get_value(i,j,k,0) == 0)   //if we don't want to modify this match
-			return(0);
+			return;
 	ssdTemp = dispField->get_value(i,j,k,3); //get the saved ssd value
 	
 	for (int z=0; z<(wValues->xSize); z++)	//test for different search indices
@@ -615,7 +614,7 @@ int patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume 
 		if (check_max_shift_distance( (xRand-i),(yRand-j),(tRand-k),params) == false)
 			continue;	//the new position is too far away
 
-		ssdTemp =  ssd_patch_measure(imgVolA, imgVolB, dispField,occVol, i, j, k, xRand, yRand, tRand, ssdTemp,params);
+		ssdTemp =  ssd_patch_measure(imgVolA, imgVolB,occVol, i, j, k, xRand, yRand, tRand, ssdTemp,params);
 
 		if (ssdTemp != -1)	//we have a better match
 		{
@@ -623,8 +622,6 @@ int patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume 
 			dispField->set_value(i,j,k,1, (imageDataType)(yRand-j));
 			dispField->set_value(i,j,k,2, (imageDataType)(tRand-k));
 			dispField->set_value(i,j,k,3, (imageDataType)(ssdTemp));
-
-			nbModified = nbModified+1;
 		}
 		else
 			ssdTemp = dispField->get_value(i,j,k,3); //set the saved ssd value bakc to its proper (not -1) value
@@ -633,16 +630,14 @@ int patch_match_random_search_patch_level(nTupleVolume *dispField, nTupleVolume 
     delete xDisp;
     delete yDisp;
     delete tDisp;
-    return(nbModified);
 }
 
 //one iteration of the propagation of the patch match algorithm, for a SINGLE patch
-int patch_match_propagation_patch_level(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume, nTupleVolume *occVol,  
-        nTupleVolume *modVol, const patchMatchParameterStruct *params, int iterationNb, int i, int j, int k)
+void patch_match_propagation_patch_level(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume, nTupleVolume *occVol,  
+        const patchMatchParameterStruct *params, int iterationNb, int i, int j, int k)
 {
 	//declarations
 	int *correctInd;
-    int nbModified=0;
 	float currentError, *minVector;
 	
 	correctInd = new int;
@@ -660,22 +655,19 @@ int patch_match_propagation_patch_level(nTupleVolume *dispField, nTupleVolume *d
 	if (*correctInd == -1)	//if the best displacement is the current one
 	{
 		dispField->set_value(i,j,k,3,currentError);
-		return(0);
+		return;
 	}
 	if (iterationNb&1)	//if we are on an odd iteration
 	{
 		if ((*correctInd) == 0){
 			copy_pixel_values_nTuple_volume(dispField,dispField, min_int(i+1,((int)dispField->xSize)-1), j, k, i, j, k);
-			nbModified++;
 		}
 
 		else if((*correctInd) == 1){
 			copy_pixel_values_nTuple_volume(dispField,dispField, i, min_int(j+1,((int)dispField->ySize)-1), k, i, j, k);
-			nbModified++;
 		}
 		else if( (*correctInd) == 2){
 			copy_pixel_values_nTuple_volume(dispField,dispField, i, j, min_int(k+1,((int)dispField->tSize)-1), i, j, k);
-			nbModified++;
 		}
 		else
 			MY_PRINTF("Error, correct ind not chosen\n.");
@@ -687,17 +679,14 @@ int patch_match_propagation_patch_level(nTupleVolume *dispField, nTupleVolume *d
 	{
 		if ( (*correctInd) == 0){
 			copy_pixel_values_nTuple_volume(dispField,dispField, max_int(i-1,0), j, k, i, j, k);
-			nbModified++;
 		}
 
 		else if( (*correctInd) == 1){
 			copy_pixel_values_nTuple_volume(dispField,dispField, i, max_int(j-1,0), k, i, j, k);
-			nbModified++;
 		}
 
 		else if( (*correctInd) == 2){
 			copy_pixel_values_nTuple_volume(dispField,dispField, i, j, max_int(k-1,0), i, j, k);
-			nbModified++;
 		}
 		else
 			MY_PRINTF("Error, correct ind not chosen\n.");
@@ -709,7 +698,6 @@ int patch_match_propagation_patch_level(nTupleVolume *dispField, nTupleVolume *d
 	delete correctInd;
 	delete minVector;
 	
-	return(nbModified);
 }
 
 
@@ -738,17 +726,17 @@ float get_min_correct_error(nTupleVolume *dispField,nTupleVolume *departVol,nTup
         dispX = (int)dispField->get_value((int)max_int(x-1,0),y,t,0); dispY = (int)dispField->get_value((int)max_int(x-1,0),y,t,1); dispT = (int)dispField->get_value((int)max_int(x-1,0),y,t,2); 
         if ( check_in_inner_boundaries(arrivalVol,x+dispX,y+dispY,t+dispT,params) && (!check_is_occluded(occVol, x+dispX, y+dispY, t+dispT)) &&
                 (!check_already_used_patch( dispField, x, y, t, dispX, dispY, dispT)))
-            minVector[0] = ssd_patch_measure(departVol, arrivalVol, dispField,occVol,x,y,t,x+dispX,y+dispY,t+dispT,minError,params);
+            minVector[0] = ssd_patch_measure(departVol, arrivalVol,occVol,x,y,t,x+dispX,y+dispY,t+dispT,minError,params);
         
         dispX = (int)dispField->get_value(x,(int)max_int(y-1,0),t,0); dispY = (int)dispField->get_value(x,(int)max_int(y-1,0),t,1); dispT = (int)dispField->get_value(x,(int)max_int(y-1,0),t,2); 
         if ( check_in_inner_boundaries(arrivalVol,x+dispX,y+dispY,t+dispT,params) && (!check_is_occluded(occVol, x+dispX, y+dispY, t+dispT)) && 
                 (!check_already_used_patch( dispField, x, y, t, dispX, dispY, dispT)))
-            minVector[1] = ssd_patch_measure(departVol, arrivalVol, dispField,occVol,x,y,t,x+dispX,y+dispY,t+dispT,minError,params);
+            minVector[1] = ssd_patch_measure(departVol, arrivalVol,occVol,x,y,t,x+dispX,y+dispY,t+dispT,minError,params);
         
         dispX = (int)dispField->get_value(x,y,(int)max_int(t-1,0),0); dispY = (int)dispField->get_value(x,y,(int)max_int(t-1,0),1); dispT = (int)dispField->get_value(x,y,(int)max_int(t-1,0),2); 
         if ( check_in_inner_boundaries(arrivalVol,x+dispX,y+dispY,t+dispT,params) && (!check_is_occluded(occVol, x+dispX, y+dispY, t+dispT)) &&
                 (!check_already_used_patch( dispField, x, y, t, dispX, dispY, dispT)))
-            minVector[2] = ssd_patch_measure(departVol, arrivalVol, dispField,occVol,x,y,t,x+dispX,y+dispY,t+dispT,minError,params);//
+            minVector[2] = ssd_patch_measure(departVol, arrivalVol,occVol,x,y,t,x+dispX,y+dispY,t+dispT,minError,params);//
         
 
 		for (i=0;i<NDIMS;i++)
@@ -785,17 +773,17 @@ float get_min_correct_error(nTupleVolume *dispField,nTupleVolume *departVol,nTup
         dispX = (int)dispField->get_value((int)min_int(x+1,(departVol->xSize)-1),y,t,0); dispY = (int)dispField->get_value((int)min_int(x+1,(departVol->xSize)-1),y,t,1); dispT = (int)dispField->get_value((int)min_int(x+1,(departVol->xSize)-1),y,t,2); 
         if ( check_in_inner_boundaries(arrivalVol,x+dispX,y+dispY,t+dispT,params) && (!check_is_occluded(occVol, x+dispX, y+dispY, t+dispT)) && 
                 (!check_already_used_patch( dispField, x, y, t, dispX, dispY, dispT)))
-            minVector[0] = ssd_patch_measure(departVol, arrivalVol, dispField,occVol,x,y,t,x+dispX,y+dispY,t+dispT,minError,params);
+            minVector[0] = ssd_patch_measure(departVol, arrivalVol,occVol,x,y,t,x+dispX,y+dispY,t+dispT,minError,params);
         
         dispX = (int)dispField->get_value(x,(int)min_int(y+1,(departVol->ySize)-1),t,0); dispY = (int)dispField->get_value(x,(int)min_int(y+1,(departVol->ySize)-1),t,1); dispT = (int)dispField->get_value(x,(int)min_int(y+1,(departVol->ySize)-1),t,2); 
         if ( check_in_inner_boundaries(arrivalVol,x+dispX,y+dispY,t+dispT,params) && (!check_is_occluded(occVol, x+dispX, y+dispY, t+dispT)) && 
                 (!check_already_used_patch( dispField, x, y, t, dispX, dispY, dispT)))
-            minVector[1] = ssd_patch_measure(departVol, arrivalVol, dispField,occVol,x,y,t,x+dispX,y+dispY,t+dispT,minError,params);
+            minVector[1] = ssd_patch_measure(departVol, arrivalVol,occVol,x,y,t,x+dispX,y+dispY,t+dispT,minError,params);
         
         dispX = (int)dispField->get_value(x,y,(int)min_int(t+1,(departVol->tSize)-1),0); dispY = (int)dispField->get_value(x,y,(int)min_int(t+1,(departVol->tSize)-1),1); dispT = (int)dispField->get_value(x,y,(int)min_int(t+1,(departVol->tSize)-1),2); 
         if ( check_in_inner_boundaries(arrivalVol,x+dispX,y+dispY,t+dispT,params) && (!check_is_occluded(occVol, x+dispX, y+dispY, t+dispT)) &&
                 (!check_already_used_patch( dispField, x, y, t, dispX, dispY, dispT)))
-            minVector[2] = ssd_patch_measure(departVol, arrivalVol,dispField,occVol,x,y,t,x+dispX,y+dispY,t+dispT,minError,params);
+            minVector[2] = ssd_patch_measure(departVol, arrivalVol,occVol,x,y,t,x+dispX,y+dispY,t+dispT,minError,params);
 
 		for (i=0;i<NDIMS;i++)
 		{

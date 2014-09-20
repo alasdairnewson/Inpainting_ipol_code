@@ -8,11 +8,11 @@
 	#include "common_reconstruct_image.h"
 	#include "image_structures.h"
     
-    int check_disp_field(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume, nTupleVolume *occVol);
+    int check_disp_field(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume);
     
     float get_adaptive_sigma(float *weights, int weightsLength, float sigmaPercentile);
     
-    int estimate_best_colour(nTupleVolume *imgVol, nTupleVolume *imgVolModified,float *weights, int weightsLength,
+    int estimate_best_colour(nTupleVolume *imgVol, float *weights, int weightsLength,
                                 float *colours, int i, int j, int k);
     
 #endif

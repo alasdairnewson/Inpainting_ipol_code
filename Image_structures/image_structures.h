@@ -168,6 +168,7 @@
         //texture attributes
         nTupleVolume *normGradX;
         nTupleVolume *normGradY;
+        int verboseMode;
 	}patchMatchParameterStruct;
 	
 	typedef nTupleVolume** nTupleVolumePyramid;

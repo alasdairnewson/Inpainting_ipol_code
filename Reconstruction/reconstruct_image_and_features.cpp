@@ -158,7 +158,7 @@ void reconstruct_image_and_features(nTupleVolume* imgVol, nTupleVolume* occVol,
                     
                     if (reconstructionType == 3)
                     {
-                        estimate_best_colour(imgVol,imgVol, weights, nbNeighbours, colours, i, j, k);
+                        estimate_best_colour(imgVol, weights, nbNeighbours, colours, i, j, k);
                         continue;
                     }
                     //get the 75th percentile of the distances for setting the adaptive sigma
