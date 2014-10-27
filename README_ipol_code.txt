@@ -1,6 +1,11 @@
-    Author : Alasdair Newson
+Author : Alasdair Newson
 Date : 14 April 2014
 Subject : Image inpainting code guide
+
+Alasdair Newson, <alasdairnewson@gmail.com>, Duke University, USA
+Andres Almansa, <andres.almansa@telecom-paristech.fr>, France
+Yann Gousseau, <yann.gousseau@telecom-paristech.fr>, France
+Patrick Perez, <patrick.perez@technicolor.com>, France
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -17,7 +22,7 @@ The code has been tested with the gcc compiler.
 Extract the source code to a directory and cd to this directory
 in a shell. Now simply execute the following command :
 
-make
+$ make
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%% USING THE CODE %%%%%%%%%%%
@@ -27,6 +32,12 @@ If this is done successfully, you can execute the image inpainting
 code. To do this, type:
 
 ./inpaint_image
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%   PARAMETERS   %%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 
 For the moment, the inpupt file name are hard coded into the program.
 You can change this by renaming the "fileIn" and "fileOcc" strings in the

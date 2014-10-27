@@ -10,19 +10,97 @@
 
 #include "image_inpainting.h"
 
+static void show_help();
+
+/// help on use
+static void show_help() {
+    std::cerr <<"\nNon-local patch-based image inpainting.\n"
+              << "Usage: " << " inpaint_image imgIn.png imgOccIn.png imgNameOut.png  [options]\n\n"
+              << "Options (default values in parentheses)\n"
+              << "Patch size in x direction \n"
+              << "    -patchSizeX : patch size in the x direction ("
+              <<7<<")\n"
+              << "    -patchSizeY : patch size in the y direction ("
+              <<7<<")\n"
+              << "    -nLevels : number of pyramid levels (by default, determined automatically by the algorithm)\n"
+              << "    -useFeatures : whether to use features, 0 for false, 1 for true ("
+              <<1<<")\n"
+              << "    -v : verbose mode, 0 for false, 1 for true ("
+              <<0<<")\n"
+              << std::endl;
+}
+
+char* getCmdOption(char ** begin, char ** end, const std::string & option)
+{
+    char ** itr = std::find(begin, end, option);
+    if (itr != end && ++itr != end)
+    {
+        return *itr;
+    }
+    return 0;
+}
+
+bool cmdOptionExists(char** begin, char** end, const std::string& option)
+{
+    return std::find(begin, end, option) != end;
+}
+
 int main(int argc, char* argv[])
 {
 
 	time_t startTime,stopTime;
+		
+	if(argc < 3) {
+        show_help();
+        return -1;
+    }
 
-	const char *fileIn = (argc >= 2) ? argv[1] : "American.png";
-	const char *fileInOcc = (argc >= 3) ? argv[2] : "American_occlusion.png";
-	const char *fileOut = (argc >= 4) ? argv[3] : "American_inpainted.png";
-	const char * patchSizeX = (argc >= 5) ? argv[4] : "7";
-	const char * patchSizeY = (argc >= 6) ? argv[5] : "7";
-	const char * nLevels = (argc >= 7) ? argv[6] : "-1";
+	//get file names
+	const char *fileIn = argv[1];
+	const char *fileInOcc = argv[2];
+	const char *fileOut = argv[3];
+	
+	const char * patchSizeX;
+	const char * patchSizeY;
+	const char * nLevels;
 	const char * useFeatures = (argc >= 8) ? argv[7] : "1";
 	const char * verboseMode = (argc >= 9) ? argv[8] : "0";
+	
+	//show help
+	if(cmdOptionExists(argv, argv+argc, "-h"))
+	{
+		show_help();
+		return(-1);
+	}
+	
+	//patch sizes
+	if(cmdOptionExists(argv, argv+argc, "-patchSizeX"))
+		patchSizeX = getCmdOption(argv, argv + argc, "-patchSizeX");
+	else
+		patchSizeX = "7";
+	if(cmdOptionExists(argv, argv+argc, "-patchSizeY"))
+		patchSizeY = getCmdOption(argv, argv + argc, "-patchSizeY");
+	else
+		patchSizeY = "7";
+	
+	//number of pyramid levels
+	if(cmdOptionExists(argv, argv+argc, "-nLevels"))
+		nLevels = getCmdOption(argv, argv + argc, "-nLevels");
+	else
+		nLevels = "-1";
+
+	//whether to use texture features or not
+	if(cmdOptionExists(argv, argv+argc, "-useFeatures"))
+		useFeatures = getCmdOption(argv, argv + argc, "-useFeatures");
+	else
+		useFeatures = "1";
+		
+	//whether to use texture features or not
+	if(cmdOptionExists(argv, argv+argc, "-v"))
+		verboseMode = getCmdOption(argv, argv + argc, "-v");
+	else
+		verboseMode = "0";
+
 	
 	time(&startTime);//startTime = clock();
 	

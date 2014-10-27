@@ -146,7 +146,6 @@ void show_patch_match_parameters(patchMatchParameterStruct *patchMatchParams)
 {
 	MY_PRINTF("Patch size x : %d\n", patchMatchParams->patchSizeX);
 	MY_PRINTF("Patch size y : %d\n", patchMatchParams->patchSizeY);
-	MY_PRINTF("Patch size t : %d\n", patchMatchParams->patchSizeT);
 	MY_PRINTF("nIters : %d\n", patchMatchParams->nIters);
 	MY_PRINTF("w : %d\n", patchMatchParams->w);
 	MY_PRINTF("alpha : %f\n", patchMatchParams->alpha);
@@ -154,6 +153,26 @@ void show_patch_match_parameters(patchMatchParameterStruct *patchMatchParams)
     MY_PRINTF("fullSearch : %d\n", patchMatchParams->fullSearch);
     
     MY_PRINTF("\n");
+}
+
+int check_patch_match_parameters(patchMatchParameterStruct *patchMatchParams)
+{
+	//verify that parameters are positive
+	if( (patchMatchParams->patchSizeX <0) || (patchMatchParams->patchSizeY <0) ||
+		 (patchMatchParams->nIters <0) || (patchMatchParams->w <0) ||
+		 (patchMatchParams->alpha <0) )
+	{
+		printf("Error, the parameters should be positive.\n");
+		return(-1);
+	}
+	 
+	//verify that the patch sizes are odd
+	if( ( (patchMatchParams->patchSizeX)%2 == 0) || ( (patchMatchParams->patchSizeY)%2 == 0) )
+	{
+		printf("Error, the parameters should be odd.\n");
+		return(-1);
+	}
+	return(1);
 }
 
 int check_in_boundaries( nTupleVolume *imgVol, int x, int y, int t)

@@ -480,9 +480,7 @@ featurePyramid create_feature_pyramid(nTupleVolume * imgVol, nTupleVolume * occV
 	imgVolGradY->absolute_value();
 	nTupleVolume * imgVolGradXavg = normalised_convolution_masked_separable(imgVolGradX, convKernelX,convKernelY, occVol);//normalised_convolution_masked(imgVolGradX, convKernel, occVol);//
 	nTupleVolume * imgVolGradYavg = normalised_convolution_masked_separable(imgVolGradY, convKernelX,convKernelY, occVol);//normalised_convolution_masked(imgVolGradY, convKernel, occVol);//
-	
-	write_image(imgVolGradXavg,"American_norm_grad_x",255);
-	write_image(imgVolGradYavg,"American_norm_grad_y",255);
+
 	
 	nTupleVolumePyramid normGradXPyramid = (nTupleVolume**)malloc( (size_t)nLevels*sizeof(nTupleVolume*));
 	nTupleVolumePyramid normGradYPyramid = (nTupleVolume**)malloc( (size_t)nLevels*sizeof(nTupleVolume*));

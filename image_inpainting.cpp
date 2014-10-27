@@ -37,7 +37,7 @@ void display_patch_match_parameters(patchMatchParameterStruct *patchMatchParams)
 	printf("Number of propagation/random search iterations: %d\n",patchMatchParams->nIters);
 	printf("Random search reduction factor (alpha) : %f\n",patchMatchParams->alpha);
 	printf("Maximum search shift allowed (-1 for whole image) : %f\n",patchMatchParams->maxShiftDistance);
-	printf("Full search (should be activated only for experimental purposes !! : %d\n",patchMatchParams->fullSearch);
+	printf("Full search (should be activated only for experimental purposes !!) : %d\n",patchMatchParams->fullSearch);
 	printf("Verbose mode : %d\n",patchMatchParams->verboseMode);
 }
 
@@ -90,6 +90,8 @@ void inpaint_image_wrapper(const char *fileIn,const char *fileOccIn, const char 
 	// **** INITIALISE PATCHMATCH PARAMETERS **** //
 	// ****************************************** //
 	patchMatchParameterStruct *patchMatchParams = initialise_patch_match_parameters(patchSizeX, patchSizeY, nx, ny, verboseMode);
+	if (check_patch_match_parameters(patchMatchParams) == -1)
+		return;
 	
 	// ****************************************** //
 	// **** INITIALISE INPAINTING PARAMETERS **** //
@@ -125,9 +127,9 @@ void inpaint_image_wrapper(const char *fileIn,const char *fileOccIn, const char 
 	delete(imgOut);
 }
 
-void inpaint_image_wrapper(float *inputImage, int nx, int ny, int nc,
+float * inpaint_image_wrapper(float *inputImage, int nx, int ny, int nc,
 	float *inputOcc, int nOccX, int nOccY, int nOccC,
-	const char *fileOut, int patchSizeX, int patchSizeY, int nLevels, bool useFeatures)
+	int patchSizeX, int patchSizeY, int nLevels, bool useFeatures)
 {
 
 	// ****************************************** //
@@ -163,9 +165,7 @@ void inpaint_image_wrapper(float *inputImage, int nx, int ny, int nc,
 	
 	nTupleVolume * imgOut = inpaint_image(imgVolIn, occVolIn, patchMatchParams, inpaintingParameters);
 
-	//write output
-	write_image(imgOut,fileOut,255);
-	delete(imgOut);
+	
 }
 
 nTupleVolume * inpaint_image( nTupleVolume *imgVolIn, nTupleVolume *occVolIn,

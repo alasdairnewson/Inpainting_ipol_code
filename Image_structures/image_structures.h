@@ -196,6 +196,7 @@ long getMilliSecs();
 float pow_int(float a, int b);
 
 void show_patch_match_parameters(patchMatchParameterStruct *patchMatchParams);
+int check_patch_match_parameters(patchMatchParameterStruct *patchMatchParams);
 
 int check_in_boundaries( nTupleVolume *imgVol, int x, int y, int t);
 int check_in_inner_boundaries( nTupleVolume *imgVol, int x, int y, int t, const patchMatchParameterStruct *params);
