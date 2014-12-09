@@ -558,14 +558,14 @@ int determine_multiscale_level_number(nTupleVolume *occVolIn, int patchSizeX, in
 	}
 	
 	maxOccDistance = 2*maxOccDistance;
-	
 	nLevels = (int) floor( (float)
 				(
 				log( ((float) maxOccDistance) /((float)maxPatchSize) )
 					) /
 					( (float) log(2) )
 					);
-	
+	//the number of levels must be at least 1
+	nLevels = max_int(nLevels,1);
 	delete(occVol);
 	return(nLevels);
 

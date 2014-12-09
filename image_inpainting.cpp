@@ -123,7 +123,8 @@ void inpaint_image_wrapper(const char *fileIn,const char *fileOccIn, const char 
 	nTupleVolume * imgOut = inpaint_image(imgVolIn, occVolIn, patchMatchParams, inpaintingParams);
 
 	//write output
-	write_image(imgOut,fileOut,255);
+	//write_image(imgOut,fileOut,255);
+	write_image(imgOut,fileOut);
 	delete(imgOut);
 }
 
@@ -165,7 +166,7 @@ float * inpaint_image_wrapper(float *inputImage, int nx, int ny, int nc,
 	
 	nTupleVolume * imgOut = inpaint_image(imgVolIn, occVolIn, patchMatchParams, inpaintingParameters);
 
-	
+	return(imgOut->get_data_ptr());
 }
 
 nTupleVolume * inpaint_image( nTupleVolume *imgVolIn, nTupleVolume *occVolIn,

@@ -37,7 +37,13 @@ code. To do this, type:
 %%%%%%%%%%%   PARAMETERS   %%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
+Adaptive weights parameters:
+    -patchSizeX : patch column size (default : 7)
+    -patchSizeY : patch row size (default : 7)
+    -nLevels : number of pyramid levels (by default -1, which means that it
+    is determined automatically by the algorithm)
+    -useFeatures : use texture features, 0 = false, 1 = true (default, 1)
+    -v : verbose, 0 = false, 1 = true (default, 0)
 
 For the moment, the inpupt file name are hard coded into the program.
 You can change this by renaming the "fileIn" and "fileOcc" strings in the
