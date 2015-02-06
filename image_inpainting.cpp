@@ -81,8 +81,13 @@ void inpaint_image_wrapper(const char *fileIn,const char *fileOccIn, const char 
 	//read input image
 	size_t nx,ny,nc;
 	size_t nOccX,nOccY,nOccC;
+	
+	//read input image
+	printf("Reading input image\n");
 	float *inputImage = read_image(fileIn,&nx,&ny,&nc);
+	
 	//read input occlusion
+	printf("Reading input occlusion\n");
 	float *inputOcc = read_image(fileOccIn,&nOccX,&nOccY,&nOccC);
 	
 	
@@ -92,7 +97,7 @@ void inpaint_image_wrapper(const char *fileIn,const char *fileOccIn, const char 
 	patchMatchParameterStruct *patchMatchParams = initialise_patch_match_parameters(patchSizeX, patchSizeY, nx, ny, verboseMode);
 	if (check_patch_match_parameters(patchMatchParams) == -1)
 		return;
-	
+	return;
 	// ****************************************** //
 	// **** INITIALISE INPAINTING PARAMETERS **** //
 	// ****************************************** //
