@@ -22,7 +22,7 @@ void reconstruct_image_and_features(nTupleVolume* imgVol, nTupleVolume* occVol,
     int nbNeighbours;
     int correctInfo;
     float alpha, adaptiveSigma;
-    float *weights,sumWeights, avgColourR, avgColourG, avgColourB, *colours;
+    float *weights,sumWeights, *colours, *avgColours;
     float avgNormGradX,avgNormGradY;
 
     hPatchSizeX = imgVol->hPatchSizeX;
@@ -31,8 +31,9 @@ void reconstruct_image_and_features(nTupleVolume* imgVol, nTupleVolume* occVol,
     
     /*allocate the (maximum) memory for the weights*/
     nbNeighbours = (imgVol->patchSizeX)*(imgVol->patchSizeY)*(imgVol->patchSizeT);
-    weights = (float*)malloc((size_t)(nbNeighbours*sizeof(float)));
-    colours = (float*)malloc((size_t)(NCHANNELS*nbNeighbours*sizeof(float)));
+    weights = new float[nbNeighbours];
+    colours = new float[(imgVol->nTupleSize)*nbNeighbours];
+    avgColours = new float[imgVol->nTupleSize];
     
 	/*check certain parameters*/
 	if( (imgVol->patchSizeX != (imgVol->patchSizeX)) || (imgVol->patchSizeY != (imgVol->patchSizeY)) ||
@@ -68,21 +69,23 @@ void reconstruct_image_and_features(nTupleVolume* imgVol, nTupleVolume* occVol,
                         continue;
                     }
                      
-                    
+                    //initialisation of the weight and colour vectors
                     for (int ii=0;ii<(imgVol->patchSizeX)*(imgVol->patchSizeY)*(imgVol->patchSizeT); ii++)
 					{
 						weights[ii] = (float)-1;
-						colours[ii] = (float)-1;
-						colours[ii + nbNeighbours] = (float)-1;
-						colours[ii + 2*nbNeighbours] = (float)-1;
+						for (int colourInd=0; colourInd<(imgVol->nTupleSize); colourInd++)
+						{
+							colours[ii + colourInd*nbNeighbours] = (float)-1;
+						}
+					}
+					for (int colourInd=0; colourInd<(imgVol->nTupleSize); colourInd++)
+					{
+						avgColours[colourInd] = (float)0.0;
 					}
 
                     sumWeights = 0.0;
                     alpha = FLT_MAX;
                     correctInfo = 0;
-                    avgColourR = 0.0;
-                    avgColourG = 0.0;
-                    avgColourB = 0.0;
                     
                     avgNormGradX = 0.0;
                     avgNormGradY = 0.0;
@@ -120,9 +123,10 @@ void reconstruct_image_and_features(nTupleVolume* imgVol, nTupleVolume* occVol,
                                     weights[weightInd] = dispField->get_value(ii,jj,kk,3);
                                     
                                     
-                                    colours[weightInd] = (float)(imgVol->get_value(xDispShift,yDispShift,tDispShift,0));
-                                    colours[weightInd + nbNeighbours] = (float)(imgVol->get_value(xDispShift,yDispShift,tDispShift,1));
-                                    colours[weightInd + 2*nbNeighbours] = (float)(imgVol->get_value(xDispShift,yDispShift,tDispShift,2));
+                                    for (int colourInd=0; colourInd<(imgVol->nTupleSize); colourInd++)
+									{
+										colours[weightInd + colourInd*nbNeighbours] = (float)(imgVol->get_value(xDispShift,yDispShift,tDispShift,colourInd));
+									}
                                     correctInfo = 1;
                                  }
                                  else   /*only use some of the patches*/
@@ -133,20 +137,21 @@ void reconstruct_image_and_features(nTupleVolume* imgVol, nTupleVolume* occVol,
                                         weightInd = (int)((kk-kMin)*(imgVol->patchSizeX)*(imgVol->patchSizeY) + (jj-jMin)*(imgVol->patchSizeX) + ii-iMin);
                                         weights[weightInd] = dispField->get_value(ii,jj,kk,3);
                                         
-                                        colours[weightInd] = (float)(imgVol->get_value(xDispShift,yDispShift,tDispShift,0));
-                                        colours[weightInd + nbNeighbours] = (float)(imgVol->get_value(xDispShift,yDispShift,tDispShift,1));
-                                        colours[weightInd + 2*nbNeighbours] = (float)(imgVol->get_value(xDispShift,yDispShift,tDispShift,2));
+                                        for (int colourInd=0; colourInd<(imgVol->nTupleSize); colourInd++)
+										{
+											colours[weightInd + colourInd*nbNeighbours] = (float)(imgVol->get_value(xDispShift,yDispShift,tDispShift,colourInd));
+										}
                                         correctInfo = 1;
                                      }
                                      else
                                      {
                                         weightInd = (int)((kk-kMin)*(imgVol->patchSizeX)*(imgVol->patchSizeY) + (jj-jMin)*(imgVol->patchSizeX) + ii-iMin);
                                         weights[weightInd] = -1;
-                                         
-                                        colours[weightInd] = -1;
-                                        colours[weightInd + nbNeighbours] = -1;
-                                        colours[weightInd + 2*nbNeighbours] = -1;
-
+                                        
+                                        for (int colourInd=0; colourInd<(imgVol->nTupleSize); colourInd++)
+										{
+											colours[weightInd + colourInd*nbNeighbours] = (float)-1;
+										}
                                         continue;
                                      }
                                  }
@@ -211,10 +216,12 @@ void reconstruct_image_and_features(nTupleVolume* imgVol, nTupleVolume* occVol,
                                     xDispShift = xDisp - (ii-i);
                                     yDispShift = yDisp - (jj-j);
                                     tDispShift = tDisp - (kk-k);
-                                    avgColourR = avgColourR + (float)(weights[weightInd])*(imgVol->get_value(xDispShift,yDispShift,tDispShift,0));
-                                    avgColourG = avgColourG + (float)(weights[weightInd])*(imgVol->get_value(xDispShift,yDispShift,tDispShift,1));
-                                    avgColourB = avgColourB + (float)(weights[weightInd])*(imgVol->get_value(xDispShift,yDispShift,tDispShift,2));
                                     
+                                    for (int colourInd=0; colourInd<(imgVol->nTupleSize); colourInd++)
+									{
+										avgColours[colourInd] = avgColours[colourInd] + (float)(weights[weightInd])*(imgVol->get_value(xDispShift,yDispShift,tDispShift,colourInd));
+									}
+
                                     avgNormGradX = avgNormGradX + (float)(weights[weightInd])*(normGradXvol->get_value(xDispShift,yDispShift,tDispShift,0));
                                     avgNormGradY = avgNormGradY + (float)(weights[weightInd])*(normGradYvol->get_value(xDispShift,yDispShift,tDispShift,0));
                                 }
@@ -231,10 +238,11 @@ void reconstruct_image_and_features(nTupleVolume* imgVol, nTupleVolume* occVol,
                                         xDispShift = xDisp - (ii-i);
                                         yDispShift = yDisp - (jj-j);
                                         tDispShift = tDisp - (kk-k);
-                                        avgColourR = avgColourR + (float)(weights[weightInd])*(imgVol->get_value(xDispShift,yDispShift,tDispShift,0));
-                                        avgColourG = avgColourG + (float)(weights[weightInd])*(imgVol->get_value(xDispShift,yDispShift,tDispShift,1));
-                                        avgColourB = avgColourB + (float)(weights[weightInd])*(imgVol->get_value(xDispShift,yDispShift,tDispShift,2));
-                                        
+                                        for (int colourInd=0; colourInd<(imgVol->nTupleSize); colourInd++)
+										{
+											avgColours[colourInd] = avgColours[colourInd] + (float)(weights[weightInd])*(imgVol->get_value(xDispShift,yDispShift,tDispShift,colourInd));
+										}
+
                                         avgNormGradX = avgNormGradX + (float)(weights[weightInd])*(normGradXvol->get_value(xDispShift,yDispShift,tDispShift,0));
                                         avgNormGradY = avgNormGradY + (float)(weights[weightInd])*(normGradYvol->get_value(xDispShift,yDispShift,tDispShift,0));
                                      }
@@ -243,17 +251,19 @@ void reconstruct_image_and_features(nTupleVolume* imgVol, nTupleVolume* occVol,
                                 }
                             }
                          /*MY_PRINTF("SumWeights : %f\n",sumWeights);*/
-                    imgVol->set_value(i,j,k,0,(imageDataType)(avgColourR/(sumWeights)));
-                    imgVol->set_value(i,j,k,1,(imageDataType)(avgColourG/(sumWeights)));
-                    imgVol->set_value(i,j,k,2,(imageDataType)(avgColourB/(sumWeights)));
-                    
+					for (int colourInd=0; colourInd<(imgVol->nTupleSize); colourInd++)
+					{
+						imgVol->set_value(i,j,k,colourInd,(imageDataType)((avgColours[colourInd])/(sumWeights)));
+					}
+
                     normGradXvol->set_value(i,j,k,0,(imageDataType)(avgNormGradX/(sumWeights)));
                     normGradYvol->set_value(i,j,k,0,(imageDataType)(avgNormGradY/(sumWeights)));
                     /*set_value_nTuple_volume(occVol,i,j,k,0,0);*/
                 }
             }
 
-        free(weights);
-        free(colours);
+        delete weights;
+        delete colours;
+        delete avgColours;
         return;
 }

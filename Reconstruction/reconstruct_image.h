@@ -12,7 +12,7 @@
 
     int check_disp_field(nTupleVolume *dispField, nTupleVolume *departVolume, nTupleVolume *arrivalVolume, nTupleVolume *occVol);
 	
-    void reconstruct_image(nTupleVolume* imgVol, nTupleVolume* imgVolModified, nTupleVolume* occVol,
+    void reconstruct_image(nTupleVolume* imgVol, nTupleVolume* occVol,
             nTupleVolume* dispField, float sigmaColour, int reconstructionType=0, bool initialisation=false);
 
 #endif

@@ -97,7 +97,6 @@ void inpaint_image_wrapper(const char *fileIn,const char *fileOccIn, const char 
 	patchMatchParameterStruct *patchMatchParams = initialise_patch_match_parameters(patchSizeX, patchSizeY, nx, ny, verboseMode);
 	if (check_patch_match_parameters(patchMatchParams) == -1)
 		return;
-	return;
 	// ****************************************** //
 	// **** INITIALISE INPAINTING PARAMETERS **** //
 	// ****************************************** //
@@ -109,17 +108,18 @@ void inpaint_image_wrapper(const char *fileIn,const char *fileOccIn, const char 
 	// ******************************** //
 	// ***** CREATE IMAGE STRUCTURES*** //
 	// ******************************** //
-	
+		
 	nTupleVolume *imgVolIn = new nTupleVolume(nc,nx,ny,patchSizeX,patchSizeY,IMAGE_INDEXING,inputImage);
 	nTupleVolume *occVolIn;
 	if (nOccC == 3)		//if we need to convert the input occlusion
 	{
-		nTupleVolume *occVolTemp = new nTupleVolume(nc,nx,ny,patchSizeX,patchSizeY,IMAGE_INDEXING,inputOcc);
+		nTupleVolume *occVolTemp = new nTupleVolume(3,nx,ny,patchSizeX,patchSizeY,IMAGE_INDEXING,inputOcc);
 		occVolIn = rgb_to_grey(occVolTemp);
 		delete(occVolTemp);
 	}
 	else
 		occVolIn = new nTupleVolume(1,nOccX,nOccY,patchSizeX,patchSizeY,IMAGE_INDEXING,inputOcc);
+	
 	
 	occVolIn->binarise();
 
@@ -270,7 +270,7 @@ patchMatchParameterStruct *patchMatchParams, inpaintingParameterStruct *inpainti
 			}
 			else
 			{
-				reconstruct_image(imgVol,imgVol,occVol,shiftVol,SIGMA_COLOUR);
+				reconstruct_image(imgVol,occVol,shiftVol,SIGMA_COLOUR);
 				//write_shift_map(shiftVol,fileOut);
 			}
 		}
@@ -292,7 +292,7 @@ patchMatchParameterStruct *patchMatchParams, inpaintingParameterStruct *inpainti
         			shiftVol, SIGMA_COLOUR);
 			}
 			else
-				reconstruct_image(imgVol,imgVol,occVol,shiftVol,SIGMA_COLOUR);
+				reconstruct_image(imgVol,occVol,shiftVol,SIGMA_COLOUR);
 			residual = calculate_residual(imgVol,imgVolPrevious,occVol);
 			if (patchMatchParams->verboseMode == true)
 				printf("Iteration number %d, residual = %f\n",iterationNb,residual);
@@ -309,7 +309,7 @@ patchMatchParameterStruct *patchMatchParams, inpaintingParameterStruct *inpainti
 		}
 		else
 		{
-			reconstruct_image(imgVol,imgVol,occVol,shiftVol,SIGMA_COLOUR,3);
+			reconstruct_image(imgVol,occVol,shiftVol,SIGMA_COLOUR,3);
 			imgVolOut = new nTupleVolume(imgVol);
 		}
 		//destroy structures
@@ -418,7 +418,7 @@ void initialise_inpainting(nTupleVolume *imgVol, nTupleVolume *occVol, featurePy
 		    	shiftVol, SIGMA_COLOUR, AGGREGATED_PATCHES,initialisation);
 		else
 		{
-			reconstruct_image(imgVol,imgVol,occVolReconstruct,shiftVol,SIGMA_COLOUR,AGGREGATED_PATCHES,initialisation);
+			reconstruct_image(imgVol,occVolReconstruct,shiftVol,SIGMA_COLOUR,AGGREGATED_PATCHES,initialisation);
 		}
 		
 		iterNb++;

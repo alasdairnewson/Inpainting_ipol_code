@@ -104,9 +104,10 @@ int estimate_best_colour(nTupleVolume *imgVol, float *weights, int weightsLength
         }
     }
 
-    imgVol->set_value(i,j,k,0,(imageDataType)(colours[minWeightInd]));
-    imgVol->set_value(i,j,k,1,(imageDataType)(colours[minWeightInd+weightsLength]));
-    imgVol->set_value(i,j,k,2,(imageDataType)(colours[minWeightInd+2*weightsLength]));
+	for (int colourInd=0; colourInd<(imgVol->nTupleSize); colourInd++)
+	{
+		imgVol->set_value(i,j,k,colourInd,(imageDataType)(colours[minWeightInd+colourInd*weightsLength]));
+	}
     
     return(1);
 }

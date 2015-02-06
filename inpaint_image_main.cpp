@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 		
 	//whether to use texture features or not
 	if(cmdOptionExists(argv, argv+argc, "-v"))
-		verboseMode = getCmdOption(argv, argv + argc, "-v");
+		verboseMode = "1";
 	else
 		verboseMode = "0";
 
